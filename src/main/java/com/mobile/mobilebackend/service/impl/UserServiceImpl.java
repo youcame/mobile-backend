@@ -2,20 +2,25 @@ package com.mobile.mobilebackend.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mobile.mobilebackend.common.ErrorCode;
+import com.mobile.mobilebackend.exception.BusinessException;
 import com.mobile.mobilebackend.model.domain.User;
 import com.mobile.mobilebackend.service.UserService;
 import com.mobile.mobilebackend.mapper.UserMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.DigestUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static com.mobile.mobilebackend.constant.UserConstant.USER_LOGIN_STATE;
 
@@ -147,6 +152,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         safeUser.setUserStatus(0);
         safeUser.setCreateTime(new Date());
         safeUser.setUserRole(user.getUserRole());
+        safeUser.setTags(user.getTags());
         return safeUser;
     }
 
@@ -154,6 +160,27 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     public int userLogout(HttpServletRequest request) {
         request.removeAttribute(USER_LOGIN_STATE);
         return 1;
+    }
+
+    @Override
+    public List<User> searchUserByTags(List<String> tagNameList) {
+        if(CollectionUtils.isEmpty(tagNameList)){
+            throw new BusinessException(ErrorCode.PARAM_ERROR,"不允许传入参数为空");
+        }
+        QueryWrapper<User>  queryWrapper = new QueryWrapper<>();
+         
+//        for (String tagName : tagNameList) {
+//            queryWrapper = queryWrapper.like("tags",tagName);
+//        }
+//        List<User> userList = userMapper.selectList(queryWrapper);
+//        return userList.stream().map(this::getSafeUser).collect(Collectors.toList());
+        List<User> allUsers = userMapper.selectList(queryWrapper);
+        List<String> list = Json.toJsonL
+        allUsers.stream().filter(user -> {
+            for (User ser : allUsers) {
+
+            }
+        })
     }
 
 //    @Override

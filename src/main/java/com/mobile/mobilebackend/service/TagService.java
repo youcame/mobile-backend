@@ -1,9 +1,7 @@
 package com.mobile.mobilebackend.service;
 
-import com.mobile.mobilebackend.model.domain.Tag;
 import com.baomidou.mybatisplus.extension.service.IService;
-
-import java.util.List;
+import com.mobile.mobilebackend.model.domain.Tag;
 
 /**
 * @author Huang
@@ -11,5 +9,5 @@ import java.util.List;
 * @createDate 2023-07-28 15:15:41
 */
 public interface TagService extends IService<Tag> {
-    public int searchUserByTags(List<String> tagList);
+
 }

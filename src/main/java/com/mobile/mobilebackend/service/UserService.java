@@ -4,6 +4,7 @@ import com.mobile.mobilebackend.model.domain.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
 * @author Huang
@@ -46,4 +47,11 @@ public interface UserService extends IService<User> {
      * @return
      */
     //boolean updateFrontUser(ModifyUserRequest user);
+
+    /**
+     *
+     * @param tagList 传入的标签组
+     * @return 标签对应的用户
+     */
+    public List<User> searchUserByTags(List<String> tagList);
 }

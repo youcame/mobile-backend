@@ -13,6 +13,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler
     public BaseResponse businessExceptionHandler(BusinessException e){
+        //if(e.getCode())
         log.info("RunTimeException:"+e.getMessage(), e);
         return ResultUtil.error(e.getCode(),e.getMessage(), e.getDescription());
     }

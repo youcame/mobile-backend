@@ -8,6 +8,7 @@ class MobileBackendApplicationTests {
 
     @Test
     void contextLoads() {
+        System.out.println(1  );
     }
 
 }

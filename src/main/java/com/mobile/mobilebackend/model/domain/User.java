@@ -1,10 +1,10 @@
 package com.mobile.mobilebackend.model.domain;
 
 import com.baomidou.mybatisplus.annotation.*;
+import lombok.Data;
 
 import java.io.Serializable;
 import java.util.Date;
-import lombok.Data;
 
 /**
  * 用户信息表
@@ -81,7 +81,7 @@ public class User implements Serializable {
     private Integer userRole;
 
     /**
-     * 标签列表
+     * 标签列表 json格式
      */
     private String tags;
 
