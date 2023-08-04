@@ -4,9 +4,9 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mobile.mobilebackend.common.ErrorCode;
 import com.mobile.mobilebackend.exception.BusinessException;
+import com.mobile.mobilebackend.mapper.UserMapper;
 import com.mobile.mobilebackend.model.domain.User;
 import com.mobile.mobilebackend.service.UserService;
-import com.mobile.mobilebackend.mapper.UserMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -20,7 +20,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import static com.mobile.mobilebackend.constant.UserConstant.USER_LOGIN_STATE;
 
@@ -164,24 +163,25 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     @Override
     public List<User> searchUserByTags(List<String> tagNameList) {
-        if(CollectionUtils.isEmpty(tagNameList)){
-            throw new BusinessException(ErrorCode.PARAM_ERROR,"不允许传入参数为空");
+        if (CollectionUtils.isEmpty(tagNameList)) {
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "不允许传入参数为空");
         }
-        QueryWrapper<User>  queryWrapper = new QueryWrapper<>();
-         
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        return null;
+    }
 //        for (String tagName : tagNameList) {
 //            queryWrapper = queryWrapper.like("tags",tagName);
 //        }
 //        List<User> userList = userMapper.selectList(queryWrapper);
 //        return userList.stream().map(this::getSafeUser).collect(Collectors.toList());
-        List<User> allUsers = userMapper.selectList(queryWrapper);
-        List<String> list = Json.toJsonL
-        allUsers.stream().filter(user -> {
-            for (User ser : allUsers) {
-
-            }
-        })
-    }
+//        List<User> allUsers = userMapper.selectList(queryWrapper);
+//        //List<String> list = Json.toJsonL
+//        allUsers.stream().filter(user -> {
+//            for (User ser : allUsers) {
+//
+//            }
+//        })
+//    }
 
 //    @Override
 //    public boolean updateFrontUser(ModifyUserRequest user) {
