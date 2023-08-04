@@ -20,6 +20,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static com.mobile.mobilebackend.constant.UserConstant.USER_LOGIN_STATE;
 
@@ -165,21 +166,43 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             throw new BusinessException(ErrorCode.PARAM_ERROR, "不允许传入参数为空");
         }
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        return null;
-    }
-//        for (String tagName : tagNameList) {
-//            queryWrapper = queryWrapper.like("tags",tagName);
-//        }
-//        List<User> userList = userMapper.selectList(queryWrapper);
-//        return userList.stream().map(this::getSafeUser).collect(Collectors.toList());
+
+
+        for (String tagName : tagNameList) {
+            queryWrapper = queryWrapper.like("tags",tagName);
+        }
+        List<User> userList = userMapper.selectList(queryWrapper);
+        return userList.stream().map(this::getSafeUser).collect(Collectors.toList());
+
 //        List<User> allUsers = userMapper.selectList(queryWrapper);
 //        //List<String> list = Json.toJsonL
 //        allUsers.stream().filter(user -> {
 //            for (User ser : allUsers) {
 //
 //            }
-//        })
-//    }
+//        });
+//        return null;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 //    @Override
 //    public boolean updateFrontUser(ModifyUserRequest user) {

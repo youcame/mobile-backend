@@ -1,5 +1,6 @@
 package com.mobile.mobilebackend.service;
 
+import com.mobile.mobilebackend.model.domain.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -17,6 +18,6 @@ class UserServiceTest {
     void searchUserByTags() {
         List<String> list = Arrays.asList("java","python");
         System.out.println(list.toString());
-        //List<User> list1 = userService.searchUserByTags("");
+        List<User> list1 = userService.searchUserByTags(list);
     }
 }
