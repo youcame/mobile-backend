@@ -2,6 +2,10 @@ package com.mobile.mobilebackend.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.mobile.mobilebackend.Authority.UserAuthority;
+import com.mobile.mobilebackend.common.BaseResponse;
+import com.mobile.mobilebackend.common.ErrorCode;
+import com.mobile.mobilebackend.common.ResultUtil;
+import com.mobile.mobilebackend.exception.BusinessException;
 import com.mobile.mobilebackend.model.domain.User;
 import com.mobile.mobilebackend.model.dto.UserLoginRequest;
 import com.mobile.mobilebackend.model.dto.UserRegisterRequest;
@@ -12,10 +16,10 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
 import java.util.List;
 
 import static com.mobile.mobilebackend.constant.UserConstant.USER_LOGIN_STATE;
+
 
 /**
  * 用户接口
@@ -31,48 +35,47 @@ public class UserController {
     private UserService userService;
 
     @PostMapping("/register")
-    public Long userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
+    public BaseResponse<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
         if (userRegisterRequest == null) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "请求为空");
         }
         long result = userService.userRegister(userRegisterRequest.getUserAccount(), userRegisterRequest.getPassword(), userRegisterRequest.getCheckPassword());
-        return result;
+        return ResultUtil.success(result);
     }
 
     @GetMapping("/current")
-    public User getCurrentUser(HttpServletRequest request){
+    public BaseResponse<User> getCurrentUser(HttpServletRequest request){
         User user = (User)request.getSession().getAttribute(USER_LOGIN_STATE);
         if(user == null){
-            return null;
+            throw new BusinessException(ErrorCode.NO_LOGIN);
         }
         else {
             long id =user.getId();
             User currentUser = userService.getById(id);
-            //todo 校验用户是否合法
-            return userService.getSafeUser(currentUser);
+            return ResultUtil.success(userService.getSafeUser(currentUser));
         }
 
     }
     @PostMapping("/login")
-    public User userRegister(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
+    public BaseResponse<User> userRegister(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
         if (userLoginRequest == null) {
-            return null;
+            throw new BusinessException(ErrorCode.NO_LOGIN);
         }
-        return userService.userLogin(userLoginRequest.getUserAccount(), userLoginRequest.getPassword(), request);
+        return ResultUtil.success(userService.userLogin(userLoginRequest.getUserAccount(), userLoginRequest.getPassword(), request));
     }
 
     @PostMapping("/logout")
-    public Integer userLogout(HttpServletRequest request) {
+    public BaseResponse<Integer> userLogout(HttpServletRequest request) {
         if (request == null) {
-            return null;
+            throw new BusinessException(ErrorCode.NO_LOGIN);
         }
-        return userService.userLogout(request);
+        return ResultUtil.success(userService.userLogout(request));
     }
 
     @GetMapping("/search")
-    public List<User> searchUsers(String userAccount, String username, HttpServletRequest request) {
+    public BaseResponse<List<User>> searchUsers(String userAccount, String username, HttpServletRequest request) {
         if(!UserAuthority.isAdmin(request)){
-            return new ArrayList<>();
+            throw new BusinessException(ErrorCode.NO_AUTH);
         }
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         if (StringUtils.isNotBlank(userAccount)) {
@@ -81,26 +84,27 @@ public class UserController {
         if (StringUtils.isNotBlank(username)) {
             queryWrapper.like("username", username);
         }
-        return userService.list(queryWrapper);
+        return ResultUtil.success(userService.list(queryWrapper));
     }
 
     @PostMapping("/delete")
-    public boolean deleteUser(@RequestBody Long id, HttpServletRequest request) {
+    public BaseResponse<Boolean> deleteUser(@RequestBody Long id, HttpServletRequest request) {
         if(!UserAuthority.isAdmin(request)){
-            return false;
+            throw new BusinessException(ErrorCode.NO_AUTH);
         }
         if (id < 0) {
-            return false;
-        } else return userService.removeById(id);
+            throw new BusinessException(ErrorCode.PARAM_ERROR,"删除的id不正确");
+        } else return ResultUtil.success(userService.removeById(id));
     }
 
 //    @PostMapping("/update")
-//    public boolean updateUser(@RequestBody ModifyUserRequest user, HttpServletRequest request){
+//    public BaseResponse<Boolean> updateUser(@RequestBody ModifyUserRequest user, HttpServletRequest request){
 //        if(user == null){
-//            return false;
+//            throw new BusinessException(ErrorCode.PARAM_ERROR,"更新用户为空");
 //        }
 //        else{
-//            return userService.updateFrontUser(user);
+//            Boolean b = userService.updateFrontUser(user);
+//            return ResultUtil.success(b);
 //        }
 //    }
 
