@@ -1,5 +1,6 @@
 package com.mobile.mobilebackend.service.impl;
 
+import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mobile.mobilebackend.common.ErrorCode;
@@ -166,22 +167,23 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             throw new BusinessException(ErrorCode.PARAM_ERROR, "不允许传入参数为空");
         }
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-
-
-        for (String tagName : tagNameList) {
-            queryWrapper = queryWrapper.like("tags",tagName);
-        }
-        List<User> userList = userMapper.selectList(queryWrapper);
-        return userList.stream().map(this::getSafeUser).collect(Collectors.toList());
-
-//        List<User> allUsers = userMapper.selectList(queryWrapper);
-//        //List<String> list = Json.toJsonL
-//        allUsers.stream().filter(user -> {
-//            for (User ser : allUsers) {
-//
-//            }
-//        });
-//        return null;
+//数据库查询
+//        for (String tagName : tagNameList) {
+//            queryWrapper = queryWrapper.like("tags",tagName);
+//        }
+//        List<User> userList = userMapper.selectList(queryWrapper);
+//        return userList.stream().map(this::getSafeUser).collect(Collectors.toList());
+        //内存查询
+        List<User> allUsers = userMapper.selectList(queryWrapper);
+        List<User> collect = allUsers.stream().filter(user -> {
+            if (user.getTags() == null) return false;
+            List<String> tags = JSON.parseArray(user.getTags(), String.class);
+            for (String tag : tagNameList) {
+                if (!tags.contains(tag)) return false;
+            }
+            return true;
+        }).map(this::getSafeUser).collect(Collectors.toList());
+        return collect;
     }
 
 
