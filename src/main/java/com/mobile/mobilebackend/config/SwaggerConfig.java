@@ -21,7 +21,6 @@ public class SwaggerConfig {
                 .apis(RequestHandlerSelectors.basePackage("com.mobile.mobilebackend.controller"))  //添加ApiOperiation注解的被扫描
                 .paths(PathSelectors.any())
                 .build();
-
     }
     /**
      * api信息
