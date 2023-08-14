@@ -34,6 +34,11 @@ public class UserController {
     @Resource
     private UserService userService;
 
+    /**
+     * 注册
+     * @param userRegisterRequest
+     * @return
+     */
     @PostMapping("/register")
     public BaseResponse<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
         if (userRegisterRequest == null) {
@@ -43,6 +48,11 @@ public class UserController {
         return ResultUtil.success(result);
     }
 
+    /**
+     * 查询当前用户
+     * @param request
+     * @return
+     */
     @GetMapping("/current")
     public BaseResponse<User> getCurrentUser(HttpServletRequest request){
         User user = (User)request.getSession().getAttribute(USER_LOGIN_STATE);
@@ -56,14 +66,26 @@ public class UserController {
         }
 
     }
+
+    /**
+     * 用户登录
+     * @param userLoginRequest
+     * @param request
+     * @return
+     */
     @PostMapping("/login")
-    public BaseResponse<User> userRegister(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
+    public BaseResponse<User> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
         if (userLoginRequest == null) {
             throw new BusinessException(ErrorCode.NO_LOGIN);
         }
         return ResultUtil.success(userService.userLogin(userLoginRequest.getUserAccount(), userLoginRequest.getPassword(), request));
     }
 
+    /**
+     * 用户登出
+     * @param request
+     * @return
+     */
     @PostMapping("/logout")
     public BaseResponse<Integer> userLogout(HttpServletRequest request) {
         if (request == null) {
@@ -72,6 +94,13 @@ public class UserController {
         return ResultUtil.success(userService.userLogout(request));
     }
 
+    /**
+     * 搜索用户
+     * @param userAccount
+     * @param username
+     * @param request
+     * @return
+     */
     @GetMapping("/search")
     public BaseResponse<List<User>> searchUsers(String userAccount, String username, HttpServletRequest request) {
         if(!UserAuthority.isAdmin(request)){
@@ -87,6 +116,12 @@ public class UserController {
         return ResultUtil.success(userService.list(queryWrapper));
     }
 
+    /**
+     * 通过id删除用户
+     * @param id
+     * @param request
+     * @return
+     */
     @PostMapping("/delete")
     public BaseResponse<Boolean> deleteUser(@RequestBody Long id, HttpServletRequest request) {
         if(!UserAuthority.isAdmin(request)){

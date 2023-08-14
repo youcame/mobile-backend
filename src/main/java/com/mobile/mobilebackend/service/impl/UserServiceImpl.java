@@ -140,6 +140,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     public User getSafeUser(User user){
         if(user == null){
             return null;
+
         }
         User safeUser = new User();
         safeUser.setId(user.getId());
@@ -154,7 +155,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         safeUser.setUserRole(user.getUserRole());
         return safeUser;
     }
-
     @Override
     public int userLogout(HttpServletRequest request) {
         request.removeAttribute(USER_LOGIN_STATE);
