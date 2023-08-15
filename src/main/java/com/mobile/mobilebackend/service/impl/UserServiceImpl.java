@@ -167,7 +167,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             throw new BusinessException(ErrorCode.PARAM_ERROR, "不允许传入参数为空");
         }
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-//数据库查询
+          //数据库查询
 //        for (String tagName : tagNameList) {
 //            queryWrapper = queryWrapper.like("tags",tagName);
 //        }
@@ -186,6 +186,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         return collect;
     }
 
+
+//    curl "https://api.bilibili.com/x/v2/reply/main?csrf=321a53901454d3e6d480532346a101ef&mode=3&oid=787158194&pagination_str=^%^7B^%^22offset^%^22:^%^22^%^7B^%^5C^%^22type^%^5C^%^22:1,^%^5C^%^22direction^%^5C^%^22:1,^%^5C^%^22session_id^%^5C^%^22:^%^5C^%^221732673324414857^%^5C^%^22,^%^5C^%^22data^%^5C^%^22:^%^7B^%^7D^%^7D^%^22^%^7D&plat=1&type=1" ^
+//            -H "authority: api.bilibili.com" ^
+//            -H "accept: application/json, text/plain, */*" ^
+//            -H "accept-language: zh-CN,zh;q=0.9" ^
+//            -H "cookie: buvid3=203EB3D4-FCFE-0A50-93CF-6C0188F3842378544infoc; b_nut=1689123578; i-wanna-go-back=-1; _uuid=D536E75D-587D-7293-1983-DDA10E556A4B980690infoc; FEED_LIVE_VERSION=V8; header_theme_version=CLOSE; buvid4=3AE3AF37-7C65-29BD-07A0-851A322674BF79156-023071208-SlDOxG3np^%^2FcKl061wPP74w^%^3D^%^3D; DedeUserID=234120375; DedeUserID__ckMd5=478694db74f4f355; CURRENT_FNVAL=4048; nostalgia_conf=-1; rpdid=^|(RYluk^|k^|m0J'uY)muRl^|m~; b_ut=5; hit-new-style-dyn=1; hit-dyn-v2=1; buvid_fp_plain=undefined; LIVE_BUVID=AUTO7516899318942979; fingerprint=26d08b2e0b114a314510bfab85bbaf6c; PVID=1; CURRENT_QUALITY=64; SESSDATA=b3e5c002^%^2C1707384852^%^2Ce0c2d^%^2A82KuTSKzfRj0sfYoXyVq_3peBTZ2KH87EzKR4gRQSJXNXrT2Ig1g5rrBojMmKQdhjlLu79DAAASwA; bili_jct=321a53901454d3e6d480532346a101ef; sid=6xc28940; home_feed_column=5; browser_resolution=1920-923; buvid_fp=26d08b2e0b114a314510bfab85bbaf6c; b_lsid=D1AFA4A7_189F6DC6625; bp_video_offset_234120375=829875299187425408; bili_ticket=eyJhbGciOiJFUzM4NCIsImtpZCI6ImVjMDIiLCJ0eXAiOiJKV1QifQ.eyJleHAiOjE2OTIzMjI5OTMsImlhdCI6MTY5MjA2Mzc5MywicGx0IjotMX0.SO7WgTzH3PiMuKWo-9oK2vwWohJEvRDUPJILE97Kt9lATld5VH0unTilcz-HCTRq-hX353S16PtrIUkCUE2o1BLgBWkouJJJ6eqodLydN9JywfJGRAv7cuz75x343S-t; bili_ticket_expires=1692322993" ^
+//            -H "origin: https://www.bilibili.com" ^
+//            -H "referer: https://www.bilibili.com/video/BV1D14y1q7HA/?spm_id_from=333.1007.tianma.1-2-2.click&vd_source=ce2d296140a2f6de60b84bd36bb33b44" ^
+//            -H "sec-ch-ua: ^\^"Not/A)Brand^\^";v=^\^"99^\^", ^\^"Google Chrome^\^";v=^\^"115^\^", ^\^"Chromium^\^";v=^\^"115^\^"" ^
+//            -H "sec-ch-ua-mobile: ?0" ^
+//            -H "sec-ch-ua-platform: ^\^"Windows^\^"" ^
+//            -H "sec-fetch-dest: empty" ^
+//            -H "sec-fetch-mode: cors" ^
+//            -H "sec-fetch-site: same-site" ^
+//            -H "user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36" ^
+//            --compressed
 
 
 
