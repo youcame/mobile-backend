@@ -54,4 +54,8 @@ public interface UserService extends IService<User> {
      * @return 标签对应的用户
      */
     public List<User> searchUserByTags(List<String> tagList);
+
+    Boolean updateFrontUser(User user, HttpServletRequest request);
+
+    public User getLoginUser(HttpServletRequest request);
 }

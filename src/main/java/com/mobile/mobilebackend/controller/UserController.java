@@ -29,6 +29,7 @@ import static com.mobile.mobilebackend.constant.UserConstant.USER_LOGIN_STATE;
 @RestController
 @Slf4j
 @RequestMapping("/user")
+@CrossOrigin(origins = {"http://localhost:5173"})
 public class UserController {
 
     @Resource
@@ -36,6 +37,7 @@ public class UserController {
 
     /**
      * 注册
+     *
      * @param userRegisterRequest
      * @return
      */
@@ -50,17 +52,17 @@ public class UserController {
 
     /**
      * 查询当前用户
+     *
      * @param request
      * @return
      */
     @GetMapping("/current")
-    public BaseResponse<User> getCurrentUser(HttpServletRequest request){
-        User user = (User)request.getSession().getAttribute(USER_LOGIN_STATE);
-        if(user == null){
+    public BaseResponse<User> getCurrentUser(HttpServletRequest request) {
+        User user = (User) request.getSession().getAttribute(USER_LOGIN_STATE);
+        if (user == null) {
             throw new BusinessException(ErrorCode.NO_LOGIN);
-        }
-        else {
-            long id =user.getId();
+        } else {
+            long id = user.getId();
             User currentUser = userService.getById(id);
             return ResultUtil.success(userService.getSafeUser(currentUser));
         }
@@ -69,6 +71,7 @@ public class UserController {
 
     /**
      * 用户登录
+     *
      * @param userLoginRequest
      * @param request
      * @return
@@ -83,6 +86,7 @@ public class UserController {
 
     /**
      * 用户登出
+     *
      * @param request
      * @return
      */
@@ -96,6 +100,7 @@ public class UserController {
 
     /**
      * 搜索用户
+     *
      * @param userAccount
      * @param username
      * @param request
@@ -103,7 +108,7 @@ public class UserController {
      */
     @GetMapping("/search")
     public BaseResponse<List<User>> searchUsers(String userAccount, String username, HttpServletRequest request) {
-        if(!UserAuthority.isAdmin(request)){
+        if (!UserAuthority.isAdmin(request)) {
             throw new BusinessException(ErrorCode.NO_AUTH);
         }
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
@@ -118,29 +123,37 @@ public class UserController {
 
     /**
      * 通过id删除用户
+     *
      * @param id
      * @param request
      * @return
      */
     @PostMapping("/delete")
     public BaseResponse<Boolean> deleteUser(@RequestBody Long id, HttpServletRequest request) {
-        if(!UserAuthority.isAdmin(request)){
+        if (!UserAuthority.isAdmin(request)) {
             throw new BusinessException(ErrorCode.NO_AUTH);
         }
         if (id < 0) {
-            throw new BusinessException(ErrorCode.PARAM_ERROR,"删除的id不正确");
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "删除的id不正确");
         } else return ResultUtil.success(userService.removeById(id));
     }
 
-//    @PostMapping("/update")
-//    public BaseResponse<Boolean> updateUser(@RequestBody ModifyUserRequest user, HttpServletRequest request){
-//        if(user == null){
-//            throw new BusinessException(ErrorCode.PARAM_ERROR,"更新用户为空");
+    @GetMapping("/search/tags")
+    public BaseResponse<List<User>> getUserByTags(@RequestParam(required = false) List<String> tags, HttpServletRequest request) {
+//        if(!UserAuthority.isAdmin(request)){
+//            throw new BusinessException(ErrorCode.NO_AUTH);
 //        }
-//        else{
-//            Boolean b = userService.updateFrontUser(user);
-//            return ResultUtil.success(b);
-//        }
-//    }
-
+        List<User> list = userService.searchUserByTags(tags);
+        return ResultUtil.success(list);
+    }
+    @PostMapping("/update")
+    public BaseResponse<Boolean> updateUser(@RequestBody User user, HttpServletRequest request){
+        if(user == null){
+            throw new BusinessException(ErrorCode.PARAM_ERROR,"更新用户为空");
+        }
+        else{
+            Boolean b = userService.updateFrontUser(user, request);
+            return ResultUtil.success(b);
+        }
+    }
 }

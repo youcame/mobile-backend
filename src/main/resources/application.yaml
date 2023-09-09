@@ -8,9 +8,16 @@ spring:
     password: 123456
   session:
     timeout: 86400
+    store-type: redis
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
+  profiles:
+    active: dev
+  redis:
+    port: 6379
+    host: localhost
+    database: 0
 server:
   port: 8080
   servlet:
