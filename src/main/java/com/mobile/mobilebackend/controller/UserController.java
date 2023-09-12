@@ -26,10 +26,10 @@ import static com.mobile.mobilebackend.constant.UserConstant.USER_LOGIN_STATE;
  *
  * @author HUANG
  */
-@RestController
 @Slf4j
+@RestController
 @RequestMapping("/user")
-@CrossOrigin(origins = {"http://localhost:5173"})
+@CrossOrigin(origins = {"http://localhost:5173/"}, allowCredentials ="true",allowedHeaders ={"*"})
 public class UserController {
 
     @Resource
@@ -151,9 +151,8 @@ public class UserController {
         if(user == null){
             throw new BusinessException(ErrorCode.PARAM_ERROR,"更新用户为空");
         }
-        else{
-            Boolean b = userService.updateFrontUser(user, request);
-            return ResultUtil.success(b);
-        }
+        User loginUser = userService.getLoginUser(request);
+        Boolean b = userService.updateFrontUser(user, loginUser, request);
+        return ResultUtil.success(b);
     }
 }

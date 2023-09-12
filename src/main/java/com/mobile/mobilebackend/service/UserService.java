@@ -55,7 +55,7 @@ public interface UserService extends IService<User> {
      */
     public List<User> searchUserByTags(List<String> tagList);
 
-    Boolean updateFrontUser(User user, HttpServletRequest request);
+    Boolean updateFrontUser(User user, User loginUser, HttpServletRequest request);
 
     public User getLoginUser(HttpServletRequest request);
 }

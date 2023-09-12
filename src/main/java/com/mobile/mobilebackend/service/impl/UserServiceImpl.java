@@ -188,13 +188,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         return collect;
     }
 
-
+    /**
+     * user为修改之后的用户Id，loginUser为现在登陆的用户Id
+     * @param user
+     * @param loginUser
+     * @param request
+     * @return
+     */
     @Override
-    public Boolean updateFrontUser(User user, HttpServletRequest request) {
-        if(UserAuthority.isAdmin(request)){
-
-        }
+    public Boolean updateFrontUser(User user, User loginUser, HttpServletRequest request) {
         long id = user.getId();
+        if(id!=loginUser.getId()){
+            throw new BusinessException(ErrorCode.NO_AUTH);
+        }
         User changedUser = this.getById(id);
         changedUser.setUserRole(user.getUserRole());
         changedUser.setAvatarUrl(user.getAvatarUrl());
@@ -209,6 +215,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     @Override
     public User getLoginUser(HttpServletRequest request) {
         User user = (User) request.getSession().getAttribute(USER_LOGIN_STATE);
+        if(user == null)throw new BusinessException(ErrorCode.NO_AUTH);
         return user;
     }
 
