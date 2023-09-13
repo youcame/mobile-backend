@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.mobile.mobilebackend.constant.UserConstant.USER_LOGIN_STATE;
 
@@ -68,7 +69,13 @@ public class UserController {
         }
 
     }
-
+    @GetMapping("/recommend")
+    public BaseResponse<List<User>> recommendUsers(HttpServletRequest request){
+        QueryWrapper queryWrapper= new QueryWrapper<User>();
+        List<User> userList = userService.list(queryWrapper);
+        List<User> list = userList.stream().map(user -> userService.getSafeUser(user)).collect(Collectors.toList());
+        return ResultUtil.success(list);
+    }
     /**
      * 用户登录
      *
