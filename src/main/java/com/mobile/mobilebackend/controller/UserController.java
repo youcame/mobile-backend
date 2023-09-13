@@ -1,6 +1,8 @@
 package com.mobile.mobilebackend.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mobile.mobilebackend.Authority.UserAuthority;
 import com.mobile.mobilebackend.common.BaseResponse;
 import com.mobile.mobilebackend.common.ErrorCode;
@@ -70,11 +72,11 @@ public class UserController {
 
     }
     @GetMapping("/recommend")
-    public BaseResponse<List<User>> recommendUsers(HttpServletRequest request){
+    public BaseResponse<Page<User>> recommendUsers(int pageSize, int pageNumber, HttpServletRequest request){
         QueryWrapper queryWrapper= new QueryWrapper<User>();
-        List<User> userList = userService.list(queryWrapper);
-        List<User> list = userList.stream().map(user -> userService.getSafeUser(user)).collect(Collectors.toList());
-        return ResultUtil.success(list);
+        Page<User> userList = userService.page(new Page<>(pageNumber, pageSize),queryWrapper);
+        //List<User> list = userList.stream().map(user -> userService.getSafeUser(user)).collect(Collectors.toList());
+        return ResultUtil.success(userList);
     }
     /**
      * 用户登录
