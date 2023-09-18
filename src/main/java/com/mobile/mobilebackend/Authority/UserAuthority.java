@@ -1,6 +1,8 @@
 package com.mobile.mobilebackend.Authority;
 
 
+import com.mobile.mobilebackend.common.ErrorCode;
+import com.mobile.mobilebackend.exception.BusinessException;
 import com.mobile.mobilebackend.model.domain.User;
 
 import javax.servlet.http.HttpServletRequest;
@@ -27,6 +29,12 @@ public class UserAuthority {
     public static final String getCurrentUserAccount(HttpServletRequest request){
         User user = (User) request.getSession().getAttribute(USER_LOGIN_STATE);
         return user.getUserAccount();
+    }
+
+    public static final Long getCurrentUserId(HttpServletRequest request){
+        User user = (User) request.getSession().getAttribute(USER_LOGIN_STATE);
+        if(user == null)throw new BusinessException(ErrorCode.NO_LOGIN);
+        return user.getId();
     }
 
 }

@@ -50,7 +50,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      * @return 新用户id
      */
 
-    //todo：修改自定义异常
     @Override
     public long userRegister(String userAccount, String password, String checkPassword) {
 

@@ -14,11 +14,14 @@ import com.mobile.mobilebackend.model.dto.UserRegisterRequest;
 import com.mobile.mobilebackend.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.mobile.mobilebackend.constant.UserConstant.USER_LOGIN_STATE;
@@ -37,7 +40,8 @@ public class UserController {
 
     @Resource
     private UserService userService;
-
+    @Resource
+    private RedisTemplate<String, Object> redisTemplate;
     /**
      * 注册
      *
@@ -74,8 +78,19 @@ public class UserController {
     @GetMapping("/recommend")
     public BaseResponse<Page<User>> recommendUsers(int pageSize, int pageNumber, HttpServletRequest request){
         QueryWrapper queryWrapper= new QueryWrapper<User>();
-        Page<User> userList = userService.page(new Page<>(pageNumber, pageSize),queryWrapper);
-        //List<User> list = userList.stream().map(user -> userService.getSafeUser(user)).collect(Collectors.toList());
+        Long id = UserAuthority.getCurrentUserId(request);
+        String redisKey = String.format("mobile:user:recommend:%s",id);
+        ValueOperations<String, Object> valueOperations = redisTemplate.opsForValue();
+        Page<User> userList = (Page<User>) valueOperations.get(redisKey);
+        if(userList != null){
+            return ResultUtil.success(userList);
+        }
+        userList = userService.page(new Page<>(pageNumber, pageSize),queryWrapper);
+        try {
+            valueOperations.set(redisKey,userList, 60000, TimeUnit.MILLISECONDS);
+        }catch (Exception e){
+            log.error("write redis error:",e);
+        }
         return ResultUtil.success(userList);
     }
     /**
