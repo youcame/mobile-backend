@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @author Huang
 * @description 针对表【tag】的数据库操作Mapper
 * @createDate 2023-07-28 15:15:41
-* @Entity generator.domain.Tag
+* @Entity com.mobile.mobilebackend.service.impl.generator.domain.Tag
 */
 public interface TagMapper extends BaseMapper<Tag> {
 
