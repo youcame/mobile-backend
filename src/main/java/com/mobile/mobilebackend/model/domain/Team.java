@@ -68,7 +68,7 @@ public class Team implements Serializable {
      * 是否删除0-未删，1-删除
      */
     @TableLogic
-    private String isDelete;
+    private int isDelete;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
