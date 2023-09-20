@@ -111,10 +111,12 @@ public class TeamController {
     }
 
     @GetMapping("/list/page")
-    public BaseResponse<Page<Team>> getTeamsPage(TeamQuery teamQuery,int pageSize,int pageNumber){
+    public BaseResponse<Page<Team>> getTeamsPage(TeamQuery teamQuery,Integer pageSize,Integer pageNumber){
         if(teamQuery == null){
             throw new BusinessException(ErrorCode.PARAM_ERROR,"传入数据为空");
         }
+        if(pageSize == null)pageSize = 10;
+        if(pageNumber == null)pageNumber = 1;
         Team team = new Team();
         try{
             BeanUtils.copyProperties(team, teamQuery);
