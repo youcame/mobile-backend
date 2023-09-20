@@ -42,7 +42,7 @@ public class Team implements Serializable {
     /**
      * 创建人Id
      */
-    private Integer creatorId;
+    private Long creatorId;
 
     /**
      * 0-公开， 1-私有， 2-加密

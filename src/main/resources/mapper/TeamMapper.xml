@@ -10,7 +10,7 @@
             <result property="description" column="description" jdbcType="VARCHAR"/>
             <result property="maxNum" column="maxNum" jdbcType="INTEGER"/>
             <result property="expireTime" column="expireTime" jdbcType="TIMESTAMP"/>
-            <result property="creatorId" column="creatorId" jdbcType="INTEGER"/>
+            <result property="creatorId" column="creatorId" jdbcType="BIGINT"/>
             <result property="status" column="status" jdbcType="INTEGER"/>
             <result property="password" column="password" jdbcType="VARCHAR"/>
             <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>

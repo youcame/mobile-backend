@@ -37,4 +37,10 @@ public class UserAuthority {
         return user.getId();
     }
 
+    public static final User getCurrentUser(HttpServletRequest request){
+        User user = (User) request.getSession().getAttribute(USER_LOGIN_STATE);
+        if(user == null)throw new BusinessException(ErrorCode.NO_LOGIN);
+        return user;
+    }
+
 }

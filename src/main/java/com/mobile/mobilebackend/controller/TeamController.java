@@ -46,16 +46,13 @@ public class TeamController {
     private TeamService teamService;
 
     @PostMapping("/add")
-    public BaseResponse<Long> addTeam(@RequestBody Team team){
+    public BaseResponse<Long> addTeam(@RequestBody Team team, HttpServletRequest request){
         if(team == null){
             throw new BusinessException(ErrorCode.PARAM_ERROR,"参数为空");
         }
-        //User user = UserAuthority.getCurrentUserId(team);
-        boolean save = teamService.save(team);
-        if(!save){
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"创建队伍失败");
-        }
-        return ResultUtil.success(team.getId());
+        User user = UserAuthority.getCurrentUser(request);
+        Long save = teamService.addTeam(team, user);
+        return ResultUtil.success(save);
     }
 
     @PostMapping("/delete")
