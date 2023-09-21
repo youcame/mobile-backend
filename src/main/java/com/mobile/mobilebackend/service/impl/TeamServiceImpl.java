@@ -9,15 +9,26 @@ import com.mobile.mobilebackend.mapper.UserMapper;
 import com.mobile.mobilebackend.model.domain.Team;
 import com.mobile.mobilebackend.model.domain.User;
 import com.mobile.mobilebackend.model.domain.UserTeam;
+import com.mobile.mobilebackend.model.dto.TeamQuery;
+import com.mobile.mobilebackend.model.vo.UserTeamVo;
+import com.mobile.mobilebackend.model.vo.UserVo;
 import com.mobile.mobilebackend.service.TeamService;
 import com.mobile.mobilebackend.mapper.TeamMapper;
+import com.mobile.mobilebackend.service.UserService;
 import com.mobile.mobilebackend.service.UserTeamService;
+import org.apache.commons.beanutils.BeanUtils;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.ss.formula.functions.T;
+import org.ehcache.core.util.CollectionUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 import static com.mobile.mobilebackend.constant.TeamConstant.*;
@@ -34,6 +45,9 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
     TeamMapper teamMapper;
     @Resource
     UserTeamService userTeamService;
+
+    @Resource
+    UserService userService;
 
     /**
      * 创建队伍校验
@@ -108,6 +122,55 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "保存关系表错误");
         }
         return team.getId();
+    }
+
+    @Override
+    public List<UserTeamVo> teamList(TeamQuery teamQuery) throws InvocationTargetException, IllegalAccessException {
+        QueryWrapper queryWrapper = new QueryWrapper<>();
+        if(teamQuery!=null){
+            Long id = teamQuery.getId();
+            if(id!=null && id>0){
+                queryWrapper.eq("id", id);
+            }
+            String name = teamQuery.getName();
+            if(StringUtils.isNotBlank(name)){
+                queryWrapper.like("name", name);
+            }
+            String description = teamQuery.getDescription();
+            if(StringUtils.isNotBlank(description)){
+                queryWrapper.like("description", description);
+            }
+            Integer maxNum = teamQuery.getMaxNum();
+            if(maxNum!=null && maxNum>0){
+                queryWrapper.eq("maxNum", maxNum);
+            }
+            Integer creatorId = teamQuery.getCreatorId();
+            if(creatorId!=null && creatorId>0){
+                queryWrapper.eq("creatorId",creatorId);
+            }
+            Integer status = teamQuery.getStatus();
+            if(status!=null && status>=PUBLIC_TEAM){
+                queryWrapper.eq("status",status);
+            }
+        }
+        List<UserTeamVo> userTeamVoList = new ArrayList<UserTeamVo>();
+        List<Team> teamList = this.list(queryWrapper);
+        if(CollectionUtils.isEmpty(teamList)){
+            return new ArrayList<>();
+        }
+        for (Team team : teamList) {
+            Long creatorId = team.getCreatorId();
+            if(creatorId==null)continue;
+            User user = userService.getById(creatorId);
+            User safeUser = userService.getSafeUser(user);
+            UserVo userVo = new UserVo();
+            BeanUtils.copyProperties(safeUser, userVo);
+            UserTeamVo userTeamVo = new UserTeamVo();
+            BeanUtils.copyProperties(team, userTeamVo);
+            userTeamVo.setCreateUser(userVo);
+            userTeamVoList.add(userTeamVo);
+        }
+        return userTeamVoList;
     }
 }
 

@@ -12,6 +12,7 @@ import com.mobile.mobilebackend.model.domain.User;
 import com.mobile.mobilebackend.model.dto.TeamQuery;
 import com.mobile.mobilebackend.model.dto.UserLoginRequest;
 import com.mobile.mobilebackend.model.dto.UserRegisterRequest;
+import com.mobile.mobilebackend.model.vo.UserTeamVo;
 import com.mobile.mobilebackend.service.TeamService;
 import com.mobile.mobilebackend.service.UserService;
 import io.lettuce.core.dynamic.annotation.Param;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -91,19 +93,28 @@ public class TeamController {
         return ResultUtil.success(team);
     }
 
+//    @GetMapping("/list")
+//    public BaseResponse<List<Team>> getTeams(TeamQuery teamQuery){
+//        if(teamQuery == null){
+//            throw new BusinessException(ErrorCode.PARAM_ERROR,"传入数据为空");
+//        }
+//        Team team = new Team();
+//        try{
+//            BeanUtils.copyProperties(team, teamQuery);
+//        }catch (Exception e){
+//            throw new BusinessException(ErrorCode.SYSTEM_ERROR);
+//        }
+//        QueryWrapper<Team> queryWrapper = new QueryWrapper<>(team);
+//        List<Team> list = teamService.list(queryWrapper);
+//        return ResultUtil.success(list);
+//    }
+
     @GetMapping("/list")
-    public BaseResponse<List<Team>> getTeams(TeamQuery teamQuery){
+    public BaseResponse<List<UserTeamVo>> getTeams(TeamQuery teamQuery) throws InvocationTargetException, IllegalAccessException {
         if(teamQuery == null){
             throw new BusinessException(ErrorCode.PARAM_ERROR,"传入数据为空");
         }
-        Team team = new Team();
-        try{
-            BeanUtils.copyProperties(team, teamQuery);
-        }catch (Exception e){
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR);
-        }
-        QueryWrapper<Team> queryWrapper = new QueryWrapper<>(team);
-        List<Team> list = teamService.list(queryWrapper);
+        List<UserTeamVo> list = teamService.teamList(teamQuery);
         return ResultUtil.success(list);
     }
 
