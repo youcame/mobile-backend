@@ -10,6 +10,7 @@ import com.mobile.mobilebackend.exception.BusinessException;
 import com.mobile.mobilebackend.model.domain.Team;
 import com.mobile.mobilebackend.model.domain.User;
 import com.mobile.mobilebackend.model.dto.TeamQuery;
+import com.mobile.mobilebackend.model.dto.TeamUpdateRequest;
 import com.mobile.mobilebackend.model.dto.UserLoginRequest;
 import com.mobile.mobilebackend.model.dto.UserRegisterRequest;
 import com.mobile.mobilebackend.model.vo.UserTeamVo;
@@ -47,6 +48,12 @@ public class TeamController {
     @Resource
     private TeamService teamService;
 
+    /**
+     *
+     * @param team
+     * @param request
+     * @return
+     */
     @PostMapping("/add")
     public BaseResponse<Long> addTeam(@RequestBody Team team, HttpServletRequest request){
         if(team == null){
@@ -57,6 +64,11 @@ public class TeamController {
         return ResultUtil.success(save);
     }
 
+    /**
+     * 删除队伍
+     * @param id
+     * @return
+     */
     @PostMapping("/delete")
     public BaseResponse<Boolean> deleteTeam(@RequestBody long id){
         if(id <= 0){
@@ -69,18 +81,32 @@ public class TeamController {
         return ResultUtil.success(true);
     }
 
+    /**
+     * 更新队伍
+     * @param teamUpdateRequest
+     * @param request
+     * @return  更新成功
+     */
     @PostMapping("/update")
-    public BaseResponse<Boolean> deleteTeam(@RequestBody Team team){
-        if(team == null){
-            throw new BusinessException(ErrorCode.PARAM_ERROR,"参数为空");
+    public BaseResponse<Boolean> updateTeam(@RequestBody TeamUpdateRequest teamUpdateRequest, HttpServletRequest request) throws InvocationTargetException, IllegalAccessException {
+        User loginUser = UserAuthority.getCurrentUser(request);
+        if(teamUpdateRequest == null){
+            throw new BusinessException(ErrorCode.PARAM_ERROR,"不需要更新！");
         }
-        boolean update = teamService.updateById(team);
+        Team team = new Team();
+        BeanUtils.copyProperties(team, teamUpdateRequest);
+        boolean update = teamService.updateTeam(team, loginUser);
         if(!update){
             throw new BusinessException(ErrorCode.SYSTEM_ERROR,"更新队伍失败");
         }
         return ResultUtil.success(true);
     }
 
+    /**
+     * 通过id获取
+     * @param id
+     * @return
+     */
     @GetMapping("/getById")
     public BaseResponse<Team> getTeamById(@RequestBody long id){
         if(id <= 0){

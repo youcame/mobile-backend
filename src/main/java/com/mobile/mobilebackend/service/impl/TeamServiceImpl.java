@@ -176,6 +176,19 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         }
         return userTeamVoList;
     }
+
+    @Override
+    public boolean updateTeam(Team team, User loginUser) {
+        Long id = team.getId();
+        if(id==null||id<0){
+            throw new BusinessException(ErrorCode.PARAM_ERROR,"id不存在或为空");
+        }
+        Team oleTeam = this.getById(id);
+        if(oleTeam == null)throw new BusinessException(ErrorCode.PARAM_NULL,"查不到这个队伍");
+        if(oleTeam.getCreatorId()!=loginUser.getId()&&loginUser.getUserRole()!=1)throw new BusinessException(ErrorCode.NO_AUTH);
+        boolean b = this.updateById(team);
+        return b;
+    }
 }
 
 

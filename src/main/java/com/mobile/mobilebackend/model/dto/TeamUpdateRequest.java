@@ -1,7 +1,10 @@
 package com.mobile.mobilebackend.model.dto;
 
+import lombok.Data;
+
 import java.util.Date;
 
+@Data
 public class TeamUpdateRequest {
     /**
      *队伍Id

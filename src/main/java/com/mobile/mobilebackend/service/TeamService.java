@@ -20,4 +20,6 @@ public interface TeamService extends IService<Team> {
     public long addTeam(Team team, User loginUser);
 
     List<UserTeamVo> teamList(TeamQuery teamQuery) throws InvocationTargetException, IllegalAccessException;
+
+    boolean updateTeam(Team team, User loginUser);
 }
