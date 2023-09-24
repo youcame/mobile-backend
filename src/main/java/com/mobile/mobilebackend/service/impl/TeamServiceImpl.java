@@ -80,7 +80,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         }
         String description = team.getDescription();
         //队伍描述限制
-        if (description.length() > 512 || StringUtils.isNotBlank(description)) {
+        if (description.length() > 512 && StringUtils.isNotBlank(description)) {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "队伍描述过长");
         }
         int status = Optional.ofNullable(team.getStatus()).orElse(-1);
@@ -126,11 +126,15 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
 
     @Override
     public List<UserTeamVo> teamList(TeamQuery teamQuery) throws InvocationTargetException, IllegalAccessException {
-        QueryWrapper queryWrapper = new QueryWrapper<>();
+        QueryWrapper<Team> queryWrapper = new QueryWrapper<Team>();
         if(teamQuery!=null){
             Long id = teamQuery.getId();
             if(id!=null && id>0){
                 queryWrapper.eq("id", id);
+            }
+            String searchText = teamQuery.getSearchText();
+            if(StringUtils.isNotBlank(searchText)){
+                queryWrapper.and(qw -> qw.like("name",searchText).or().like("description",searchText));
             }
             String name = teamQuery.getName();
             if(StringUtils.isNotBlank(name)){
@@ -164,9 +168,9 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
             User user = userService.getById(creatorId);
             User safeUser = userService.getSafeUser(user);
             UserVo userVo = new UserVo();
-            BeanUtils.copyProperties(safeUser, userVo);
+            BeanUtils.copyProperties(userVo, safeUser);
             UserTeamVo userTeamVo = new UserTeamVo();
-            BeanUtils.copyProperties(team, userTeamVo);
+            BeanUtils.copyProperties(userTeamVo, team);
             userTeamVo.setCreateUser(userVo);
             userTeamVoList.add(userTeamVo);
         }

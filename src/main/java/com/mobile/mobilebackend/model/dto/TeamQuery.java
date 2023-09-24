@@ -23,6 +23,11 @@ public class TeamQuery {
     private String name;
 
     /**
+     * 队伍描述(同时对队伍描述和名称搜索)
+     */
+    private String searchText;
+
+    /**
      * 队伍描述
      */
     private String description;

@@ -110,7 +110,7 @@ public class TeamController {
 //    }
 
     @GetMapping("/list")
-    public BaseResponse<List<UserTeamVo>> getTeams(TeamQuery teamQuery) throws InvocationTargetException, IllegalAccessException {
+    public BaseResponse<List<UserTeamVo>> getTeams(TeamQuery teamQuery, HttpServletRequest request) throws InvocationTargetException, IllegalAccessException {
         if(teamQuery == null){
             throw new BusinessException(ErrorCode.PARAM_ERROR,"传入数据为空");
         }
