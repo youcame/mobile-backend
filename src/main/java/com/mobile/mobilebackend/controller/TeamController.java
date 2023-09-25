@@ -9,10 +9,7 @@ import com.mobile.mobilebackend.common.ResultUtil;
 import com.mobile.mobilebackend.exception.BusinessException;
 import com.mobile.mobilebackend.model.domain.Team;
 import com.mobile.mobilebackend.model.domain.User;
-import com.mobile.mobilebackend.model.dto.TeamQuery;
-import com.mobile.mobilebackend.model.dto.TeamUpdateRequest;
-import com.mobile.mobilebackend.model.dto.UserLoginRequest;
-import com.mobile.mobilebackend.model.dto.UserRegisterRequest;
+import com.mobile.mobilebackend.model.dto.*;
 import com.mobile.mobilebackend.model.vo.UserTeamVo;
 import com.mobile.mobilebackend.service.TeamService;
 import com.mobile.mobilebackend.service.UserService;
@@ -119,21 +116,6 @@ public class TeamController {
         return ResultUtil.success(team);
     }
 
-//    @GetMapping("/list")
-//    public BaseResponse<List<Team>> getTeams(TeamQuery teamQuery){
-//        if(teamQuery == null){
-//            throw new BusinessException(ErrorCode.PARAM_ERROR,"传入数据为空");
-//        }
-//        Team team = new Team();
-//        try{
-//            BeanUtils.copyProperties(team, teamQuery);
-//        }catch (Exception e){
-//            throw new BusinessException(ErrorCode.SYSTEM_ERROR);
-//        }
-//        QueryWrapper<Team> queryWrapper = new QueryWrapper<>(team);
-//        List<Team> list = teamService.list(queryWrapper);
-//        return ResultUtil.success(list);
-//    }
 
     @GetMapping("/list")
     public BaseResponse<List<UserTeamVo>> getTeams(TeamQuery teamQuery, HttpServletRequest request) throws InvocationTargetException, IllegalAccessException {
@@ -160,5 +142,13 @@ public class TeamController {
         QueryWrapper<Team> queryWrapper = new QueryWrapper<>(team);
         Page<Team> page = teamService.page(new Page<>(pageNumber, pageSize), queryWrapper);
         return ResultUtil.success(page);
+    }
+
+    @PostMapping("join")
+    public BaseResponse<Boolean> joinTeam(@RequestBody TeamJoinRequest teamJoinRequest, HttpServletRequest request){
+        if(teamJoinRequest==null)throw new BusinessException(ErrorCode.PARAM_ERROR,"请求参数为空");
+        User loginUser = UserAuthority.getCurrentUser(request);
+        boolean result = teamService.joinTeam(teamJoinRequest, loginUser);
+        return ResultUtil.success(true);
     }
 }

@@ -9,6 +9,7 @@ import com.mobile.mobilebackend.mapper.UserMapper;
 import com.mobile.mobilebackend.model.domain.Team;
 import com.mobile.mobilebackend.model.domain.User;
 import com.mobile.mobilebackend.model.domain.UserTeam;
+import com.mobile.mobilebackend.model.dto.TeamJoinRequest;
 import com.mobile.mobilebackend.model.dto.TeamQuery;
 import com.mobile.mobilebackend.model.vo.UserTeamVo;
 import com.mobile.mobilebackend.model.vo.UserVo;
@@ -101,12 +102,13 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         QueryWrapper<Team> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("creatorId", userId);
         long count = this.count(queryWrapper);
-        if (count >= 5) {
+        if (count >= 10) {
             throw new BusinessException(ErrorCode.NO_AUTH, "创建队伍数过多");
         }
         team.setCreatorId(userId);
         team.setId(null);
         team.setCreateTime(new Date());
+        team.setUpdateTime(new Date());
         boolean save = this.save(team);
         if (!save) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "保存队伍失败");
@@ -188,6 +190,49 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         if(oleTeam.getCreatorId()!=loginUser.getId()&&loginUser.getUserRole()!=1)throw new BusinessException(ErrorCode.NO_AUTH);
         boolean b = this.updateById(team);
         return b;
+    }
+
+    @Override
+    public boolean joinTeam(TeamJoinRequest teamJoinRequest, User loginUser) {
+        Long teamId = teamJoinRequest.getTeamId();
+        String password = teamJoinRequest.getPassword();
+        Long currentUserId = loginUser.getId();
+        QueryWrapper<UserTeam> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("userId",currentUserId);
+        queryWrapper.eq("teamId",teamId);
+        List<UserTeam> list = userTeamService.list(queryWrapper);
+        long count = userTeamService.count(queryWrapper);
+        if(count >0){
+            throw new BusinessException(ErrorCode.ACCOUNT_SAME,"已经加入这个队伍了");
+        }
+        Team team = this.getById(teamId);
+        if(team==null){
+            throw new BusinessException(ErrorCode.PARAM_NULL,"无该队伍");
+        }
+        Integer status = team.getStatus();
+        if(status.equals(PRIVATE_TEAM)){
+            if(StringUtils.isBlank(password)||!team.getPassword().equals(password)){
+                throw new BusinessException(ErrorCode.VERIFY_ERROR,"密码错误");
+            }
+        }
+        if(status.equals(SECRET_TEAM)){
+            throw new BusinessException(ErrorCode.NO_AUTH,"禁止加入私有队伍");
+        }
+        if(team.getMaxNum()<= count){
+            throw new BusinessException(ErrorCode.NO_AUTH,"该队伍人数已满");
+        }
+        if(team.getExpireTime()!=null&&team.getExpireTime().before(new Date())){
+            throw new BusinessException(ErrorCode.NO_AUTH,"队伍已过期");
+        }
+        UserTeam userTeam = new UserTeam();
+        userTeam.setUserId(currentUserId);
+        userTeam.setTeamId(teamId);
+        userTeam.setJoinTime(new Date());
+        userTeam.setCreateTime(new Date());
+        userTeam.setUpdateTime(new Date());
+        boolean save = userTeamService.save(userTeam);
+        if(!save)throw new BusinessException(ErrorCode.SYSTEM_ERROR,"加入队伍失败");
+        return true;
     }
 }
 

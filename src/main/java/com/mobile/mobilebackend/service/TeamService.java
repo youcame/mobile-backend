@@ -5,6 +5,7 @@ import com.mobile.mobilebackend.exception.BusinessException;
 import com.mobile.mobilebackend.model.domain.Team;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.mobile.mobilebackend.model.domain.User;
+import com.mobile.mobilebackend.model.dto.TeamJoinRequest;
 import com.mobile.mobilebackend.model.dto.TeamQuery;
 import com.mobile.mobilebackend.model.vo.UserTeamVo;
 
@@ -22,4 +23,6 @@ public interface TeamService extends IService<Team> {
     List<UserTeamVo> teamList(TeamQuery teamQuery) throws InvocationTargetException, IllegalAccessException;
 
     boolean updateTeam(Team team, User loginUser);
+
+    boolean joinTeam(TeamJoinRequest teamJoinRequest, User loginUser);
 }
