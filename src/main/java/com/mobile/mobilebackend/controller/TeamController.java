@@ -46,16 +46,19 @@ public class TeamController {
     private TeamService teamService;
 
     /**
-     * @param team
+     * 创建队伍
+     * @param teamAddRequest
      * @param request
      * @return
      */
     @PostMapping("/add")
-    public BaseResponse<Long> createTeam(@RequestBody Team team, HttpServletRequest request) {
-        if (team == null) {
+    public BaseResponse<Long> createTeam(@RequestBody TeamAddRequest teamAddRequest, HttpServletRequest request) throws InvocationTargetException, IllegalAccessException {
+        if (teamAddRequest == null) {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "参数为空");
         }
         User user = UserAuthority.getCurrentUser(request);
+        Team team=new Team();
+        BeanUtils.copyProperties(team,teamAddRequest);
         Long save = teamService.addTeam(team, user);
         return ResultUtil.success(save);
     }
