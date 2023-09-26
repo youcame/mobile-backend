@@ -28,4 +28,10 @@
         createTime,updateTime,isDelete,
         userRole,tags
     </sql>
+
+    <select id="selectByMySelf" resultType="com.mobile.mobilebackend.model.domain.User">
+        SELECT username From user where id = 1;
+    </select>
+
+
 </mapper>

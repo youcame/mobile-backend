@@ -16,7 +16,7 @@ public class UserTeam implements Serializable {
     /**
      * 关系表Id
      */
-    @TableId
+    @TableId(type = IdType.AUTO)
     private Long id;
 
     /**

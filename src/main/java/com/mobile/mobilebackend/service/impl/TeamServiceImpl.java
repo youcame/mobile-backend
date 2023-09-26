@@ -11,6 +11,7 @@ import com.mobile.mobilebackend.model.domain.User;
 import com.mobile.mobilebackend.model.domain.UserTeam;
 import com.mobile.mobilebackend.model.dto.TeamJoinRequest;
 import com.mobile.mobilebackend.model.dto.TeamQuery;
+import com.mobile.mobilebackend.model.dto.TeamQuitRequest;
 import com.mobile.mobilebackend.model.vo.UserTeamVo;
 import com.mobile.mobilebackend.model.vo.UserVo;
 import com.mobile.mobilebackend.service.TeamService;
@@ -24,6 +25,7 @@ import org.apache.poi.ss.formula.functions.T;
 import org.ehcache.core.util.CollectionUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import javax.annotation.Resource;
 import java.lang.reflect.InvocationTargetException;
@@ -232,6 +234,63 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         userTeam.setUpdateTime(new Date());
         boolean save = userTeamService.save(userTeam);
         if(!save)throw new BusinessException(ErrorCode.SYSTEM_ERROR,"加入队伍失败");
+        return true;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean quitTeam(TeamQuitRequest teamQuitRequest, User user) {
+        if(teamQuitRequest==null)throw new BusinessException(ErrorCode.PARAM_ERROR,"请求参数为空");
+        Long teamId = teamQuitRequest.getId();
+        if(teamId==null||teamId<0)throw new BusinessException(ErrorCode.PARAM_ERROR,"传入Id不合法");
+        Team team = this.getById(teamId);
+        if(team==null){
+            throw new BusinessException(ErrorCode.PARAM_ERROR,"找不到队伍");
+        }
+        Long userId=user.getId();
+        QueryWrapper<UserTeam> queryWrapper=new QueryWrapper<>();
+        queryWrapper.eq("teamId",teamId);
+        long teamHasJoinNumber=userTeamService.count(queryWrapper);//当前队伍剩余人数
+        queryWrapper.eq("userId",userId);
+        long count = userTeamService.count(queryWrapper);
+        if(count!=1)throw new BusinessException(ErrorCode.NO_AUTH,"您已经退出队伍了");
+        //只剩最后一个人，移除队伍
+        if(teamHasJoinNumber==1){
+            boolean remove = userTeamService.remove(queryWrapper);
+            if(!remove)throw new BusinessException(ErrorCode.SYSTEM_ERROR,"退出队伍失败");
+            boolean remove1 = this.removeById(teamId);
+            if(!remove1)throw new BusinessException(ErrorCode.SYSTEM_ERROR,"删除队伍信息失败");
+        }else{
+            //退出的人是队长，转接队长
+            if(team.getCreatorId().equals(userId)){
+                QueryWrapper<UserTeam> newQueryWrapper=new QueryWrapper<>();
+                newQueryWrapper.eq("teamId",teamId);
+                newQueryWrapper.last("order by id asc limit 2");
+                List<UserTeam> list = userTeamService.list(newQueryWrapper);
+                if(list==null||list.size()<=1)throw new BusinessException(ErrorCode.SYSTEM_ERROR,"队伍人数已经小于二了");
+                team.setCreatorId(list.get(1).getUserId());
+                boolean updateResult = this.updateById(team);
+                if(!updateResult)throw new BusinessException(ErrorCode.SYSTEM_ERROR,"更新队长失败");
+                boolean remove = userTeamService.remove(queryWrapper);
+                if(!remove)throw new BusinessException(ErrorCode.SYSTEM_ERROR,"退出队伍失败");
+            }
+        }
+        return true;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean deleteTeam(@RequestBody Long id, User user) {
+        if(id==null||id<0)throw new BusinessException(ErrorCode.PARAM_ERROR,"请求参数为空或小于零");
+        Team team = this.getById(id);
+        if(team==null)throw new BusinessException(ErrorCode.PARAM_ERROR,"队伍不存在");
+        if(!team.getCreatorId().equals(user.getId()))throw new BusinessException(ErrorCode.NO_AUTH,"您没权限解散队伍");
+        boolean result = this.removeById(team);
+        if(!result)throw new BusinessException(ErrorCode.SYSTEM_ERROR,"解散队伍失败");
+        QueryWrapper<UserTeam> queryWrapper=new QueryWrapper<>();
+        queryWrapper.eq("teamId",id);
+        boolean result2 = userTeamService.remove(queryWrapper);
+        if(!result2)throw new BusinessException(ErrorCode.SYSTEM_ERROR,"删除队伍关联关系失败");
         return true;
     }
 }

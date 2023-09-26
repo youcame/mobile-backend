@@ -10,7 +10,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @Entity com.mobile.mobilebackend.service.impl.generator.domain.User
 */
 public interface UserMapper extends BaseMapper<User> {
-
+    User selectByMySelf();
 }
 
 

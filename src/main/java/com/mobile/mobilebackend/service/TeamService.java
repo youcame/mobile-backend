@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.mobile.mobilebackend.model.domain.User;
 import com.mobile.mobilebackend.model.dto.TeamJoinRequest;
 import com.mobile.mobilebackend.model.dto.TeamQuery;
+import com.mobile.mobilebackend.model.dto.TeamQuitRequest;
 import com.mobile.mobilebackend.model.vo.UserTeamVo;
 
 import java.lang.reflect.InvocationTargetException;
@@ -25,4 +26,8 @@ public interface TeamService extends IService<Team> {
     boolean updateTeam(Team team, User loginUser);
 
     boolean joinTeam(TeamJoinRequest teamJoinRequest, User loginUser);
+
+    boolean quitTeam(TeamQuitRequest teamQuitRequest, User user);
+
+    boolean deleteTeam(Long id, User user);
 }
