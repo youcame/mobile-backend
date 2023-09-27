@@ -1,4 +1,4 @@
-package com.mobile.mobilebackend.Authority;
+package com.mobile.mobilebackend.authority;
 
 
 import com.mobile.mobilebackend.common.ErrorCode;

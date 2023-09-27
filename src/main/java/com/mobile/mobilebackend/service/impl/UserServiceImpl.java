@@ -3,7 +3,6 @@ package com.mobile.mobilebackend.service.impl;
 import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.mobile.mobilebackend.Authority.UserAuthority;
 import com.mobile.mobilebackend.common.ErrorCode;
 import com.mobile.mobilebackend.exception.BusinessException;
 import com.mobile.mobilebackend.mapper.UserMapper;

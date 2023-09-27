@@ -2,7 +2,7 @@ package com.mobile.mobilebackend.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.mobile.mobilebackend.Authority.UserAuthority;
+import com.mobile.mobilebackend.authority.UserAuthority;
 import com.mobile.mobilebackend.common.BaseResponse;
 import com.mobile.mobilebackend.common.ErrorCode;
 import com.mobile.mobilebackend.common.ResultUtil;
@@ -13,21 +13,14 @@ import com.mobile.mobilebackend.model.dto.*;
 import com.mobile.mobilebackend.model.vo.UserTeamVo;
 import com.mobile.mobilebackend.service.TeamService;
 import com.mobile.mobilebackend.service.UserService;
-import io.lettuce.core.dynamic.annotation.Param;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.BeanUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import static com.mobile.mobilebackend.constant.UserConstant.USER_LOGIN_STATE;
 
 
 /**
