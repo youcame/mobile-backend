@@ -1,15 +1,13 @@
 package com.mobile.mobilebackend.model.dto;
 
 import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableLogic;
 import lombok.Data;
 
-import java.util.Date;
+import java.util.List;
 
 @Data
-public class TeamQuery {
+public class TeamQueryRequest {
 
     /**
      *
@@ -21,6 +19,11 @@ public class TeamQuery {
      * 队伍名称
      */
     private String name;
+
+    /**
+     * 队伍id列表
+     */
+    private List<Long> idList;
 
     /**
      * 队伍描述(同时对队伍描述和名称搜索)
@@ -40,7 +43,7 @@ public class TeamQuery {
     /**
      * 创建人Id
      */
-    private Integer creatorId;
+    private Long creatorId;
 
     /**
      * 0-公开， 1-私有， 2-加密

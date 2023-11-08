@@ -9,10 +9,12 @@ import com.mobile.mobilebackend.common.ResultUtil;
 import com.mobile.mobilebackend.exception.BusinessException;
 import com.mobile.mobilebackend.model.domain.Team;
 import com.mobile.mobilebackend.model.domain.User;
+import com.mobile.mobilebackend.model.domain.UserTeam;
 import com.mobile.mobilebackend.model.dto.*;
 import com.mobile.mobilebackend.model.vo.UserTeamVo;
 import com.mobile.mobilebackend.service.TeamService;
 import com.mobile.mobilebackend.service.UserService;
+import com.mobile.mobilebackend.service.UserTeamService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.BeanUtils;
 import org.springframework.web.bind.annotation.*;
@@ -20,7 +22,10 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 /**
@@ -37,6 +42,8 @@ public class TeamController {
     private UserService userService;
     @Resource
     private TeamService teamService;
+    @Resource
+    private UserTeamService userTeamService;
 
     /**
      * 创建队伍
@@ -101,7 +108,7 @@ public class TeamController {
      * @return
      */
     @GetMapping("/getById")
-    public BaseResponse<Team> getTeamById(@RequestBody long id) {
+    public BaseResponse<Team> getTeamById(@RequestParam long id) {
         if (id <= 0) {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "参数为空");
         }
@@ -112,26 +119,87 @@ public class TeamController {
         return ResultUtil.success(team);
     }
 
-
+    /**
+     * 获取队伍列表
+     * @param teamQueryRequest
+     * @param request
+     * @return
+     * @throws InvocationTargetException
+     * @throws IllegalAccessException
+     */
     @GetMapping("/list")
-    public BaseResponse<List<UserTeamVo>> getTeams(TeamQuery teamQuery, HttpServletRequest request) throws InvocationTargetException, IllegalAccessException {
-        if (teamQuery == null) {
+    public BaseResponse<List<UserTeamVo>> getTeams(TeamQueryRequest teamQueryRequest, HttpServletRequest request) throws InvocationTargetException, IllegalAccessException {
+        if (teamQueryRequest == null) {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "传入数据为空");
         }
-        List<UserTeamVo> list = teamService.teamList(teamQuery);
+        List<UserTeamVo> list = teamService.teamList(teamQueryRequest);
         return ResultUtil.success(list);
     }
 
+    /**
+     * 获取我创建的队伍
+     * @param teamQueryRequest
+     * @param request
+     * @return
+     * @throws InvocationTargetException
+     * @throws IllegalAccessException
+     */
+    @GetMapping("/list/myTeams")
+    public BaseResponse<List<UserTeamVo>> getMyTeams(TeamQueryRequest teamQueryRequest, HttpServletRequest request) throws InvocationTargetException, IllegalAccessException {
+        if (teamQueryRequest == null) {
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "传入数据为空");
+        }
+        User currentUser = UserAuthority.getCurrentUser(request);
+        teamQueryRequest.setCreatorId(currentUser.getId());
+        List<UserTeamVo> userTeamVos = teamService.teamList(teamQueryRequest);
+        return ResultUtil.success(userTeamVos);
+    }
+
+    /**
+     * 获取我加入的队伍列表
+     * @param teamQueryRequest
+     * @param request
+     * @return
+     * @throws InvocationTargetException
+     * @throws IllegalAccessException
+     */
+    @GetMapping("/list/myJoinTeam")
+    public BaseResponse<List<UserTeamVo>> getMyJoinTeams(TeamQueryRequest teamQueryRequest, HttpServletRequest request) throws InvocationTargetException, IllegalAccessException {
+        if (teamQueryRequest == null) {
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "传入数据为空");
+        }
+        QueryWrapper<UserTeam> queryWrapper = new QueryWrapper<>();
+        User currentUser = UserAuthority.getCurrentUser(request);
+        queryWrapper.eq("userId",currentUser.getId());
+        List<UserTeam> list = userTeamService.list(queryWrapper);
+        HashSet<Long> hs = new HashSet<>();
+        for (UserTeam userTeam : list) {
+            hs.add(userTeam.getTeamId());
+        }
+        list.stream().sorted().collect(Collectors.toList());
+        ArrayList<Long> teamIdList = new ArrayList<>(hs);
+        teamQueryRequest.setIdList(teamIdList);
+        List<UserTeamVo> userTeamVos = teamService.teamList(teamQueryRequest);
+        return ResultUtil.success(userTeamVos);
+    }
+
+    /**
+     * 获取队伍分页列表
+     * @param teamQueryRequest
+     * @return
+     * @throws InvocationTargetException
+     * @throws IllegalAccessException
+     */
     @GetMapping("/list/page")
-    public BaseResponse<Page<Team>> getTeamsPage(TeamQuery teamQuery, Integer pageSize, Integer pageNumber) {
-        if (teamQuery == null) {
+    public BaseResponse<Page<Team>> getTeamsPage(TeamQueryRequest teamQueryRequest, Integer pageSize, Integer pageNumber) {
+        if (teamQueryRequest == null) {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "传入数据为空");
         }
         if (pageSize == null) pageSize = 10;
         if (pageNumber == null) pageNumber = 1;
         Team team = new Team();
         try {
-            BeanUtils.copyProperties(team, teamQuery);
+            BeanUtils.copyProperties(team, teamQueryRequest);
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR);
         }

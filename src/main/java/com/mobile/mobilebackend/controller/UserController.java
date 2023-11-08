@@ -40,6 +40,7 @@ public class UserController {
     private UserService userService;
     @Resource
     private RedisTemplate<String, Object> redisTemplate;
+
     /**
      * 注册
      *
@@ -71,7 +72,6 @@ public class UserController {
             User currentUser = userService.getById(id);
             return ResultUtil.success(userService.getSafeUser(currentUser));
         }
-
     }
     @GetMapping("/recommend")
     public BaseResponse<Page<User>> recommendUsers(int pageSize, int pageNumber, HttpServletRequest request){
@@ -168,6 +168,13 @@ public class UserController {
         List<User> list = userService.searchUserByTags(tags);
         return ResultUtil.success(list);
     }
+
+    /**
+     * 更新队伍
+     * @param user
+     * @param request
+     * @return
+     */
     @PostMapping("/update")
     public BaseResponse<Boolean> updateUser(@RequestBody User user, HttpServletRequest request){
         if(user == null){

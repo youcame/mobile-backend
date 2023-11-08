@@ -1,12 +1,10 @@
 package com.mobile.mobilebackend.service;
 
-import com.mobile.mobilebackend.common.ErrorCode;
-import com.mobile.mobilebackend.exception.BusinessException;
 import com.mobile.mobilebackend.model.domain.Team;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.mobile.mobilebackend.model.domain.User;
 import com.mobile.mobilebackend.model.dto.TeamJoinRequest;
-import com.mobile.mobilebackend.model.dto.TeamQuery;
+import com.mobile.mobilebackend.model.dto.TeamQueryRequest;
 import com.mobile.mobilebackend.model.dto.TeamQuitRequest;
 import com.mobile.mobilebackend.model.vo.UserTeamVo;
 
@@ -21,7 +19,7 @@ import java.util.List;
 public interface TeamService extends IService<Team> {
     public long addTeam(Team team, User loginUser);
 
-    List<UserTeamVo> teamList(TeamQuery teamQuery) throws InvocationTargetException, IllegalAccessException;
+    List<UserTeamVo> teamList(TeamQueryRequest teamQueryRequest) throws InvocationTargetException, IllegalAccessException;
 
     boolean updateTeam(Team team, User loginUser);
 

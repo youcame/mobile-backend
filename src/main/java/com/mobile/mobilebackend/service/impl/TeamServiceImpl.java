@@ -8,7 +8,7 @@ import com.mobile.mobilebackend.model.domain.Team;
 import com.mobile.mobilebackend.model.domain.User;
 import com.mobile.mobilebackend.model.domain.UserTeam;
 import com.mobile.mobilebackend.model.dto.TeamJoinRequest;
-import com.mobile.mobilebackend.model.dto.TeamQuery;
+import com.mobile.mobilebackend.model.dto.TeamQueryRequest;
 import com.mobile.mobilebackend.model.dto.TeamQuitRequest;
 import com.mobile.mobilebackend.model.vo.UserTeamVo;
 import com.mobile.mobilebackend.model.vo.UserVo;
@@ -124,45 +124,57 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         return team.getId();
     }
 
+    /**
+     * 搜索队伍（List）中的所有人
+     * @param teamQueryRequest
+     * @return
+     * @throws InvocationTargetException
+     * @throws IllegalAccessException
+     */
     @Override
-    public List<UserTeamVo> teamList(TeamQuery teamQuery) throws InvocationTargetException, IllegalAccessException {
-        QueryWrapper<Team> queryWrapper = new QueryWrapper<Team>();
-        if(teamQuery!=null){
-            Long id = teamQuery.getId();
+    public List<UserTeamVo> teamList(TeamQueryRequest teamQueryRequest) throws InvocationTargetException, IllegalAccessException {
+        QueryWrapper<Team> queryWrapper = new QueryWrapper<>();
+        if(teamQueryRequest !=null){
+            Long id = teamQueryRequest.getId();
             if(id!=null && id>0){
                 queryWrapper.eq("id", id);
             }
-            String searchText = teamQuery.getSearchText();
+            List<Long> ids = teamQueryRequest.getIdList();
+            if(CollectionUtils.isNotEmpty(ids)) {
+                queryWrapper.in("id", ids);
+            }
+            String searchText = teamQueryRequest.getSearchText();
             if(StringUtils.isNotBlank(searchText)){
                 queryWrapper.and(qw -> qw.like("name",searchText).or().like("description",searchText));
             }
-            String name = teamQuery.getName();
+            String name = teamQueryRequest.getName();
             if(StringUtils.isNotBlank(name)){
                 queryWrapper.like("name", name);
             }
-            String description = teamQuery.getDescription();
+            String description = teamQueryRequest.getDescription();
             if(StringUtils.isNotBlank(description)){
                 queryWrapper.like("description", description);
             }
-            Integer maxNum = teamQuery.getMaxNum();
+            Integer maxNum = teamQueryRequest.getMaxNum();
             if(maxNum!=null && maxNum>0){
                 queryWrapper.eq("maxNum", maxNum);
             }
-            Integer creatorId = teamQuery.getCreatorId();
+            Long creatorId = teamQueryRequest.getCreatorId();
             if(creatorId!=null && creatorId>0){
                 queryWrapper.eq("creatorId",creatorId);
             }
-            Integer status = teamQuery.getStatus();
+            Integer status = teamQueryRequest.getStatus();
             if(status!=null && status>=PUBLIC_TEAM){
                 queryWrapper.eq("status",status);
             }
         }
-        List<UserTeamVo> userTeamVoList = new ArrayList<UserTeamVo>();
+        List<UserTeamVo> userTeamVoList = new ArrayList<>();
         List<Team> teamList = this.list(queryWrapper);
         if(CollectionUtils.isEmpty(teamList)){
             return new ArrayList<>();
         }
         for (Team team : teamList) {
+
             Long creatorId = team.getCreatorId();
             if(creatorId==null)continue;
             User user = userService.getById(creatorId);
@@ -177,6 +189,12 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         return userTeamVoList;
     }
 
+    /**
+     * 更新队伍
+     * @param team
+     * @param loginUser
+     * @return
+     */
     @Override
     public boolean updateTeam(Team team, User loginUser) {
         Long id = team.getId();
@@ -190,6 +208,12 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         return b;
     }
 
+    /**
+     * 加入队伍
+     * @param teamJoinRequest
+     * @param loginUser
+     * @return
+     */
     @Override
     public boolean joinTeam(TeamJoinRequest teamJoinRequest, User loginUser) {
         Long teamId = teamJoinRequest.getTeamId();
@@ -233,6 +257,12 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         return true;
     }
 
+    /**
+     * 退出队伍
+     * @param teamQuitRequest
+     * @param user
+     * @return
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean quitTeam(TeamQuitRequest teamQuitRequest, User user) {
@@ -274,6 +304,12 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         return true;
     }
 
+    /**
+     * 解散队伍
+     * @param id
+     * @param user
+     * @return
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean deleteTeam(@RequestBody Long id, User user) {
