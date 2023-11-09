@@ -32,6 +32,11 @@ public class UserVo implements Serializable {
     private Integer gender;
 
     /**
+     * 用户介绍
+     */
+    private String profile;
+
+    /**
      * 电话
      */
     private String phone;

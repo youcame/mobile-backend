@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mobile.mobilebackend.authority.UserAuthority;
 import com.mobile.mobilebackend.common.BaseResponse;
 import com.mobile.mobilebackend.common.ErrorCode;
+import com.mobile.mobilebackend.common.IdRequest;
 import com.mobile.mobilebackend.common.ResultUtil;
 import com.mobile.mobilebackend.exception.BusinessException;
 import com.mobile.mobilebackend.model.domain.Team;
@@ -12,6 +13,7 @@ import com.mobile.mobilebackend.model.domain.User;
 import com.mobile.mobilebackend.model.domain.UserTeam;
 import com.mobile.mobilebackend.model.dto.*;
 import com.mobile.mobilebackend.model.vo.UserTeamVo;
+import com.mobile.mobilebackend.model.vo.UserVo;
 import com.mobile.mobilebackend.service.TeamService;
 import com.mobile.mobilebackend.service.UserService;
 import com.mobile.mobilebackend.service.UserTeamService;
@@ -25,6 +27,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 
@@ -66,14 +69,15 @@ public class TeamController {
     /**
      * 删除队伍
      *
-     * @param id
+     * @param idRequest
      * @return
      */
     @PostMapping("/delete")
-    public BaseResponse<Boolean> deleteTeam(@RequestBody long id, HttpServletRequest request) {
-        if (id <= 0) {
+    public BaseResponse<Boolean> deleteTeam(@RequestBody IdRequest idRequest, HttpServletRequest request) {
+        if(idRequest==null || idRequest.getId()<=0){
             throw new BusinessException(ErrorCode.PARAM_ERROR, "参数为空");
         }
+        Long id = idRequest.getId();
         User user = UserAuthority.getCurrentUser(request);
         boolean delete = teamService.deleteTeam(id,user);
         return ResultUtil.success(true);
@@ -133,6 +137,17 @@ public class TeamController {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "传入数据为空");
         }
         List<UserTeamVo> list = teamService.teamList(teamQueryRequest);
+        //判断当前队伍是否在队伍中
+        User currentUser = UserAuthority.getCurrentUser(request);
+        List<Long> teamIdList = list.stream().map(UserTeamVo::getId).collect(Collectors.toList());
+        QueryWrapper<UserTeam> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("userId",currentUser.getId());
+        queryWrapper.in("teamId",teamIdList);
+        List<UserTeam> userTeamList = userTeamService.list(queryWrapper);
+        Set<Long> collect = userTeamList.stream().map(UserTeam::getTeamId).collect(Collectors.toSet());
+        list.forEach(userTeamVo -> {
+            userTeamVo.setIsInTeam(collect.contains(userTeamVo.getId()));
+        });
         return ResultUtil.success(list);
     }
 
@@ -176,9 +191,10 @@ public class TeamController {
         for (UserTeam userTeam : list) {
             hs.add(userTeam.getTeamId());
         }
-        list.stream().sorted().collect(Collectors.toList());
+        if(hs.size()==0)return ResultUtil.success(new ArrayList<>());
         ArrayList<Long> teamIdList = new ArrayList<>(hs);
         teamQueryRequest.setIdList(teamIdList);
+
         List<UserTeamVo> userTeamVos = teamService.teamList(teamQueryRequest);
         return ResultUtil.success(userTeamVos);
     }
@@ -208,6 +224,10 @@ public class TeamController {
         return ResultUtil.success(page);
     }
 
+
+    /**
+     * 加入队伍
+     */
     @PostMapping("/join")
     public BaseResponse<Boolean> joinTeam(@RequestBody TeamJoinRequest teamJoinRequest, HttpServletRequest request) {
         if (teamJoinRequest == null) throw new BusinessException(ErrorCode.PARAM_ERROR, "请求参数为空");

@@ -12,7 +12,6 @@ public class TeamQueryRequest {
     /**
      *
      */
-    @TableId(type = IdType.AUTO)
     private Long id;
 
     /**

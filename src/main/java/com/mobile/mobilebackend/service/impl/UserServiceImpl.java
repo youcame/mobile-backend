@@ -6,10 +6,14 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mobile.mobilebackend.common.ErrorCode;
 import com.mobile.mobilebackend.exception.BusinessException;
 import com.mobile.mobilebackend.mapper.UserMapper;
+import com.mobile.mobilebackend.model.domain.Tag;
 import com.mobile.mobilebackend.model.domain.User;
+import com.mobile.mobilebackend.model.vo.UserVo;
 import com.mobile.mobilebackend.service.UserService;
+import com.mobile.mobilebackend.utils.RecommandUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.DigestUtils;
@@ -17,12 +21,13 @@ import org.springframework.util.DigestUtils;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.nio.charset.StandardCharsets;
-import java.util.Date;
-import java.util.List;
+import java.time.Year;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static com.mobile.mobilebackend.constant.TeamConstant.TOTAL_RECOMMEND_USER;
 import static com.mobile.mobilebackend.constant.UserConstant.USER_LOGIN_STATE;
 
 /**
@@ -41,6 +46,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     private static final String SALT = "hao";
     @Resource
     private UserMapper userMapper;
+
 
     /**
      * @param userAccount
@@ -215,6 +221,42 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         User user = (User) request.getSession().getAttribute(USER_LOGIN_STATE);
         if(user == null)throw new BusinessException(ErrorCode.NO_AUTH);
         return user;
+    }
+
+    @Override
+    public List<UserVo> matchUser(int num, User currentUser) {
+        String tags = currentUser.getTags();
+        List<UserVo> targetList = new ArrayList<>();
+        List<String> listTag = JSON.parseArray(tags,String.class);
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.isNotNull("tags");
+        queryWrapper.select("id", "userRole", "tags", "userName", "avatarUrl","profile");
+        List<User> userList = this.list(queryWrapper);
+        PriorityQueue<UserVo> queue = new PriorityQueue<>((a,b)->{
+                List<String> list1= JSON.parseArray(a.getTags(),String.class);
+                List<String> list2= JSON.parseArray(b.getTags(),String.class);
+                int dis1 = RecommandUtils.minTagDistance(list1,listTag);
+                int dis2 = RecommandUtils.minTagDistance(list2,listTag);
+                return dis2-dis1;
+            }
+        );
+        for (User user : userList) {
+            if(Objects.equals(user.getId(), currentUser.getId())||user.getUserRole()==1){
+                continue;
+            }
+            UserVo userVo = new UserVo();
+            BeanUtils.copyProperties(user,userVo);
+            queue.offer(userVo);
+            if(queue.size()>TOTAL_RECOMMEND_USER) {
+                queue.poll();
+            }
+        }
+        int n=queue.size();
+        for(int i=0;i<n&&i<TOTAL_RECOMMEND_USER;i++){
+            targetList.add(queue.poll());
+        }
+        Collections.shuffle(targetList);
+        return targetList.subList(0,num);
     }
 
 }

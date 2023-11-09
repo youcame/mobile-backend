@@ -6,6 +6,9 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * 1对n，一个team多个user
+ */
 @Data
 public class UserTeamVo implements Serializable {
 
@@ -54,7 +57,18 @@ public class UserTeamVo implements Serializable {
      */
     private Date updateTime;
 
+    /**
+     * 队伍中人物的列表
+     */
     private List<UserVo> userVoList;
 
+    /**
+     * 创建人
+     */
     private UserVo createUser;
+
+    /**
+     * 当前用户是否加入这个队伍
+     */
+    private Boolean isInTeam = false;
 }

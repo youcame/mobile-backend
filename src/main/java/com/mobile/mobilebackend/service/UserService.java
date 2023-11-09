@@ -2,6 +2,7 @@ package com.mobile.mobilebackend.service;
 
 import com.mobile.mobilebackend.model.domain.User;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.mobile.mobilebackend.model.vo.UserVo;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -58,4 +59,6 @@ public interface UserService extends IService<User> {
     Boolean updateFrontUser(User user, User loginUser, HttpServletRequest request);
 
     public User getLoginUser(HttpServletRequest request);
+
+    List<UserVo> matchUser(int num, User currentUser);
 }

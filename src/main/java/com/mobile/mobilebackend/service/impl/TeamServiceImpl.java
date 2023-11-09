@@ -299,6 +299,9 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
                 if(!updateResult)throw new BusinessException(ErrorCode.SYSTEM_ERROR,"更新队长失败");
                 boolean remove = userTeamService.remove(queryWrapper);
                 if(!remove)throw new BusinessException(ErrorCode.SYSTEM_ERROR,"退出队伍失败");
+            }else {
+                boolean remove = userTeamService.remove(queryWrapper);
+                if(!remove)throw new BusinessException(ErrorCode.SYSTEM_ERROR,"退出队伍失败");
             }
         }
         return true;

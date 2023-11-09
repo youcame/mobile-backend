@@ -10,6 +10,7 @@ import com.mobile.mobilebackend.exception.BusinessException;
 import com.mobile.mobilebackend.model.domain.User;
 import com.mobile.mobilebackend.model.dto.UserLoginRequest;
 import com.mobile.mobilebackend.model.dto.UserRegisterRequest;
+import com.mobile.mobilebackend.model.vo.UserVo;
 import com.mobile.mobilebackend.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -90,6 +91,21 @@ public class UserController {
             log.error("write redis error:",e);
         }
         return ResultUtil.success(userList);
+    }
+
+    /**
+     * 获取匹配的好友（推荐）
+     * @param num
+     * @param request
+     * @return
+     */
+    @GetMapping("/match")
+    public BaseResponse<List<UserVo>> matchUser(Integer num, HttpServletRequest request){
+        if(num==null)num=5;
+        if(num<=0||num>16)throw new BusinessException(ErrorCode.PARAM_ERROR);
+        User currentUser = UserAuthority.getCurrentUser(request);
+        List<UserVo> list = userService.matchUser(num,currentUser);
+        return ResultUtil.success(list);
     }
     /**
      * 用户登录
