@@ -63,6 +63,11 @@ public class UserTeamVo implements Serializable {
     private List<UserVo> userVoList;
 
     /**
+     * 队伍中目前的人数
+     */
+    private Integer teamNowNumber;
+
+    /**
      * 创建人
      */
     private UserVo createUser;

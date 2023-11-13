@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mobile.mobilebackend.mapper.FriendMapper">
+
+    <resultMap id="BaseResultMap" type="com.mobile.mobilebackend.model.domain.Friend">
+            <id property="id" column="id" jdbcType="INTEGER"/>
+            <result property="firstUserId" column="firstUserId" jdbcType="BIGINT"/>
+            <result property="secondUserId" column="secondUserId" jdbcType="BIGINT"/>
+            <result property="status" column="status" jdbcType="INTEGER"/>
+            <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
+            <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
+            <result property="isDelete" column="isDelete" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,firstUserId,secondUserId,
+        status,createTime,updateTime,
+        isDelete
+    </sql>
+</mapper>

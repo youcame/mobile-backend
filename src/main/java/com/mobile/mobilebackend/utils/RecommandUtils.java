@@ -13,7 +13,7 @@ public class RecommandUtils {
         for(int i=0;i<=n2;i++)dp[0][i]=i;
         for(int i=1;i<=n1;i++){
             for(int j=1;j<=n2;j++){
-                if(!Objects.equals(word1.get(i - 1), word2.get(i - 1)))dp[i][j]=Math.min(dp[i-1][j-1],Math.min(dp[i-1][j],dp[i][j-1]))+1;
+                if(!Objects.equals(word1.get(i - 1), word2.get(j - 1)))dp[i][j]=Math.min(dp[i-1][j-1],Math.min(dp[i-1][j],dp[i][j-1]))+1;
                 else dp[i][j]=dp[i-1][j-1];
             }
         }

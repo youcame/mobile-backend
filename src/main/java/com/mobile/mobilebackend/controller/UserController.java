@@ -7,6 +7,7 @@ import com.mobile.mobilebackend.common.BaseResponse;
 import com.mobile.mobilebackend.common.ErrorCode;
 import com.mobile.mobilebackend.common.ResultUtil;
 import com.mobile.mobilebackend.exception.BusinessException;
+import com.mobile.mobilebackend.exception.ThrowUtils;
 import com.mobile.mobilebackend.model.domain.User;
 import com.mobile.mobilebackend.model.dto.UserLoginRequest;
 import com.mobile.mobilebackend.model.dto.UserRegisterRequest;
@@ -14,6 +15,7 @@ import com.mobile.mobilebackend.model.vo.UserVo;
 import com.mobile.mobilebackend.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.web.bind.annotation.*;
@@ -145,7 +147,7 @@ public class UserController {
      * @return
      */
     @GetMapping("/search")
-    public BaseResponse<List<User>> searchUsers(String userAccount, String username, HttpServletRequest request) {
+    public BaseResponse<List<User>> searchUsers(String userAccount, String username, Long id,HttpServletRequest request) {
         if (!UserAuthority.isAdmin(request)) {
             throw new BusinessException(ErrorCode.NO_AUTH);
         }
@@ -155,6 +157,8 @@ public class UserController {
         }
         if (StringUtils.isNotBlank(username)) {
             queryWrapper.like("username", username);
+        }if(id!=null){
+            queryWrapper.eq("id",id);
         }
         return ResultUtil.success(userService.list(queryWrapper));
     }
@@ -199,5 +203,25 @@ public class UserController {
         User loginUser = userService.getLoginUser(request);
         Boolean b = userService.updateFrontUser(user, loginUser, request);
         return ResultUtil.success(b);
+    }
+
+    /**
+     * 根据 id 获取用户（仅管理员）
+     *
+     * @param id
+     * @param request
+     * @return
+     */
+    @GetMapping("/get")
+    public BaseResponse<UserVo> getUserById(long id, HttpServletRequest request) {
+        if (id <= 0) {
+            throw new BusinessException(ErrorCode.PARAM_ERROR);
+        }
+        UserAuthority.getCurrentUser(request);
+        User user = userService.getById(id);
+        ThrowUtils.throwIf(user == null, ErrorCode.NOT_FOUND_ERROR);
+        UserVo userVo = new UserVo();
+        BeanUtils.copyProperties(user,userVo);
+        return ResultUtil.success(userVo);
     }
 }

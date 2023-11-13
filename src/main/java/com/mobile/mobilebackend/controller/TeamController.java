@@ -27,8 +27,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 
 /**
@@ -106,7 +104,7 @@ public class TeamController {
     }
 
     /**
-     * 通过id获取
+     * 通过id获取队伍
      *
      * @param id
      * @return
@@ -124,6 +122,31 @@ public class TeamController {
     }
 
     /**
+     * 通过队伍id获取用户列表
+     *
+     * @param teamId
+     * @return
+     */
+    @GetMapping("/getByTeamId")
+    public BaseResponse<List<UserVo>> getByTeamId(@RequestParam Long teamId) throws InvocationTargetException, IllegalAccessException {
+        if (teamId==null||teamId <= 0) {
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "参数为空");
+        }
+        QueryWrapper<UserTeam> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("teamId",teamId);
+        List<UserTeam> list = userTeamService.list(queryWrapper);
+        List<UserVo> ansList = new ArrayList<>();
+        for (UserTeam userTeam : list) {
+            UserVo userVo = new UserVo();
+            Long userId = userTeam.getUserId();
+            User user = userService.getById(userId);
+            BeanUtils.copyProperties(userVo,user);
+            ansList.add(userVo);
+        }
+        return ResultUtil.success(ansList);
+    }
+
+    /**
      * 获取队伍列表
      * @param teamQueryRequest
      * @param request
@@ -137,17 +160,9 @@ public class TeamController {
             throw new BusinessException(ErrorCode.PARAM_ERROR, "传入数据为空");
         }
         List<UserTeamVo> list = teamService.teamList(teamQueryRequest);
-        //判断当前队伍是否在队伍中
+        //判断当前用户是否在队伍中，在的话则剔除掉
         User currentUser = UserAuthority.getCurrentUser(request);
-        List<Long> teamIdList = list.stream().map(UserTeamVo::getId).collect(Collectors.toList());
-        QueryWrapper<UserTeam> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("userId",currentUser.getId());
-        queryWrapper.in("teamId",teamIdList);
-        List<UserTeam> userTeamList = userTeamService.list(queryWrapper);
-        Set<Long> collect = userTeamList.stream().map(UserTeam::getTeamId).collect(Collectors.toSet());
-        list.forEach(userTeamVo -> {
-            userTeamVo.setIsInTeam(collect.contains(userTeamVo.getId()));
-        });
+        teamService.filterTeamWithoutMe(list,currentUser);
         return ResultUtil.success(list);
     }
 
@@ -189,14 +204,17 @@ public class TeamController {
         List<UserTeam> list = userTeamService.list(queryWrapper);
         HashSet<Long> hs = new HashSet<>();
         for (UserTeam userTeam : list) {
-            hs.add(userTeam.getTeamId());
+            Long teamId = userTeam.getTeamId();
+            QueryWrapper<Team> queryWrapper1 = new QueryWrapper<>();
+            queryWrapper1.eq("id",teamId);
+            Team team = teamService.getOne(queryWrapper1);
+            if(!team.getCreatorId().equals(currentUser.getId()))hs.add(teamId);
         }
         if(hs.size()==0)return ResultUtil.success(new ArrayList<>());
         ArrayList<Long> teamIdList = new ArrayList<>(hs);
         teamQueryRequest.setIdList(teamIdList);
-
-        List<UserTeamVo> userTeamVos = teamService.teamList(teamQueryRequest);
-        return ResultUtil.success(userTeamVos);
+        List<UserTeamVo> userTeamVoList = teamService.teamList(teamQueryRequest);
+        return this.getTeams(teamQueryRequest,request);
     }
 
     /**

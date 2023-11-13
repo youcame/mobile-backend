@@ -3,6 +3,7 @@ package com.mobile.mobilebackend.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mobile.mobilebackend.common.ErrorCode;
+import com.mobile.mobilebackend.common.ResultUtil;
 import com.mobile.mobilebackend.exception.BusinessException;
 import com.mobile.mobilebackend.model.domain.Team;
 import com.mobile.mobilebackend.model.domain.User;
@@ -25,10 +26,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import javax.annotation.Resource;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.mobile.mobilebackend.constant.TeamConstant.*;
 
@@ -169,12 +168,12 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
             }
         }
         List<UserTeamVo> userTeamVoList = new ArrayList<>();
+        //获取到的队伍列表
         List<Team> teamList = this.list(queryWrapper);
         if(CollectionUtils.isEmpty(teamList)){
             return new ArrayList<>();
         }
         for (Team team : teamList) {
-
             Long creatorId = team.getCreatorId();
             if(creatorId==null)continue;
             User user = userService.getById(creatorId);
@@ -184,6 +183,11 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
             UserTeamVo userTeamVo = new UserTeamVo();
             BeanUtils.copyProperties(userTeamVo, team);
             userTeamVo.setCreateUser(userVo);
+            //下面查找队伍中的用户（数量），list先不查
+            QueryWrapper<UserTeam> queryWrapper1 = new QueryWrapper<>();
+            queryWrapper1.eq("teamId",team.getId());
+            Long n=userTeamService.count(queryWrapper1);
+            userTeamVo.setTeamNowNumber(Math.toIntExact(n));
             userTeamVoList.add(userTeamVo);
         }
         return userTeamVoList;
@@ -203,7 +207,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         }
         Team oleTeam = this.getById(id);
         if(oleTeam == null)throw new BusinessException(ErrorCode.PARAM_NULL,"查不到这个队伍");
-        if(oleTeam.getCreatorId()!=loginUser.getId()&&loginUser.getUserRole()!=1)throw new BusinessException(ErrorCode.NO_AUTH);
+        if(!oleTeam.getCreatorId().equals(loginUser.getId())&&loginUser.getUserRole()!=1)throw new BusinessException(ErrorCode.NO_AUTH);
         boolean b = this.updateById(team);
         return b;
     }
@@ -219,42 +223,49 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         Long teamId = teamJoinRequest.getTeamId();
         String password = teamJoinRequest.getPassword();
         Long currentUserId = loginUser.getId();
-        QueryWrapper<UserTeam> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("userId",currentUserId);
-        queryWrapper.eq("teamId",teamId);
-        List<UserTeam> list = userTeamService.list(queryWrapper);
-        long count = userTeamService.count(queryWrapper);
-        if(count >0){
-            throw new BusinessException(ErrorCode.ACCOUNT_SAME,"已经加入这个队伍了");
-        }
-        Team team = this.getById(teamId);
-        if(team==null){
-            throw new BusinessException(ErrorCode.PARAM_NULL,"无该队伍");
-        }
-        Integer status = team.getStatus();
-        if(status.equals(PRIVATE_TEAM)){
-            if(StringUtils.isBlank(password)||!team.getPassword().equals(password)){
-                throw new BusinessException(ErrorCode.VERIFY_ERROR,"密码错误");
+        synchronized (this) {
+            //判断是否满足加入条件
+            QueryWrapper<UserTeam> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("teamId", teamId);
+            long nowNumber = userTeamService.count(queryWrapper);
+            queryWrapper.eq("userId", currentUserId);
+            List<UserTeam> list = userTeamService.list(queryWrapper);
+            //我是否加入队伍（1为加入）
+            long count = userTeamService.count(queryWrapper);
+            if (count > 0) {
+                throw new BusinessException(ErrorCode.ACCOUNT_SAME, "已经加入这个队伍了");
             }
+            Team team = this.getById(teamId);
+            if (team == null) {
+                throw new BusinessException(ErrorCode.PARAM_NULL, "无该队伍");
+            }
+            Integer status = team.getStatus();
+            if (status.equals(PRIVATE_TEAM)) {
+                if (StringUtils.isBlank(password) || !team.getPassword().equals(password)) {
+                    throw new BusinessException(ErrorCode.VERIFY_ERROR, "密码错误");
+                }
+            }
+            if (status.equals(SECRET_TEAM)) {
+                throw new BusinessException(ErrorCode.NO_AUTH, "禁止加入私有队伍");
+            }
+            if (team.getMaxNum() <= nowNumber) {
+                throw new BusinessException(ErrorCode.NO_AUTH, "该队伍人数已满");
+            }
+            if (team.getExpireTime() != null && team.getExpireTime().before(new Date())) {
+                throw new BusinessException(ErrorCode.NO_AUTH, "队伍已过期");
+            }
+
+            //修改队伍信息
+            UserTeam userTeam = new UserTeam();
+            userTeam.setUserId(currentUserId);
+            userTeam.setTeamId(teamId);
+            userTeam.setJoinTime(new Date());
+            userTeam.setCreateTime(new Date());
+            userTeam.setUpdateTime(new Date());
+            boolean save = userTeamService.save(userTeam);
+            if (!save) throw new BusinessException(ErrorCode.SYSTEM_ERROR, "加入队伍失败");
+            return true;
         }
-        if(status.equals(SECRET_TEAM)){
-            throw new BusinessException(ErrorCode.NO_AUTH,"禁止加入私有队伍");
-        }
-        if(team.getMaxNum()<= count){
-            throw new BusinessException(ErrorCode.NO_AUTH,"该队伍人数已满");
-        }
-        if(team.getExpireTime()!=null&&team.getExpireTime().before(new Date())){
-            throw new BusinessException(ErrorCode.NO_AUTH,"队伍已过期");
-        }
-        UserTeam userTeam = new UserTeam();
-        userTeam.setUserId(currentUserId);
-        userTeam.setTeamId(teamId);
-        userTeam.setJoinTime(new Date());
-        userTeam.setCreateTime(new Date());
-        userTeam.setUpdateTime(new Date());
-        boolean save = userTeamService.save(userTeam);
-        if(!save)throw new BusinessException(ErrorCode.SYSTEM_ERROR,"加入队伍失败");
-        return true;
     }
 
     /**
@@ -327,6 +338,21 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team> implements Te
         boolean result2 = userTeamService.remove(queryWrapper);
         if(!result2)throw new BusinessException(ErrorCode.SYSTEM_ERROR,"删除队伍关联关系失败");
         return true;
+    }
+
+    @Override
+    public List<UserTeamVo> filterTeamWithoutMe(List<UserTeamVo> list, User currentUser) {
+        List<Long> teamIdList = list.stream().map(UserTeamVo::getId).collect(Collectors.toList());
+        QueryWrapper<UserTeam> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("userId",currentUser.getId());
+        if(teamIdList.size()==0)return new ArrayList<>();
+        queryWrapper.in("teamId",teamIdList);
+        List<UserTeam> userTeamList = userTeamService.list(queryWrapper);
+        Set<Long> collect = userTeamList.stream().map(UserTeam::getTeamId).collect(Collectors.toSet());
+        list.forEach(userTeamVo -> {
+            userTeamVo.setIsInTeam(collect.contains(userTeamVo.getId()));
+        });
+        return list;
     }
 }
 

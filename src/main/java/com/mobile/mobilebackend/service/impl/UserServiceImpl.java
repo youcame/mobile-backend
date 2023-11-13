@@ -96,6 +96,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         count = userMapper.selectCount(queryWrapper);
         User user = new User();
         user.setUserAccount(userAccount);
+        //默认昵称为用户名
+        user.setUsername(userAccount);
         user.setPassword(encryptPassword);
         user.setId(count+1);
         user.setCreateTime(new Date());
@@ -205,14 +207,24 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         if(id!=loginUser.getId()){
             throw new BusinessException(ErrorCode.NO_AUTH);
         }
+
         User changedUser = this.getById(id);
-        changedUser.setUserRole(user.getUserRole());
-        changedUser.setAvatarUrl(user.getAvatarUrl());
-        changedUser.setUserStatus(user.getUserStatus());
-        changedUser.setEmail(user.getEmail());
-        changedUser.setPhone(user.getPhone());
-        changedUser.setUsername(user.getUsername());
-        changedUser.setGender(user.getGender());
+        if(user.getTags()!=null) {
+            String[] tagList = user.getTags().split(",");
+            String result = JSON.toJSONString(tagList);
+            user.setTags(result);
+        }
+        BeanUtils.copyProperties(user,changedUser);
+//        changedUser.setUserRole(user.getUserRole());
+//        changedUser.setAvatarUrl(user.getAvatarUrl());
+//        changedUser.setUserStatus(user.getUserStatus());
+//        changedUser.setEmail(user.getEmail());
+//        changedUser.setPhone(user.getPhone());
+//        changedUser.setUsername(user.getUsername());
+//        changedUser.setGender(user.getGender());
+//        String[] tagList = user.getTags().split(",");
+//        String result = JSON.toJSONString(tagList);
+//        changedUser.setTags(result);
         return this.updateById(changedUser);
     }
 
@@ -226,8 +238,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     @Override
     public List<UserVo> matchUser(int num, User currentUser) {
         String tags = currentUser.getTags();
+        if(tags == null || "[]".equals(tags)){
+            tags = "[\"男\",\"大二\",\"浑南校区\",\"网络开发\"]";
+        }
         List<UserVo> targetList = new ArrayList<>();
         List<String> listTag = JSON.parseArray(tags,String.class);
+        //当前登录用户的标签
+        Collections.sort(listTag);
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.isNotNull("tags");
         queryWrapper.select("id", "userRole", "tags", "userName", "avatarUrl","profile");
@@ -235,6 +252,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         PriorityQueue<UserVo> queue = new PriorityQueue<>((a,b)->{
                 List<String> list1= JSON.parseArray(a.getTags(),String.class);
                 List<String> list2= JSON.parseArray(b.getTags(),String.class);
+                Collections.sort(list1);
+                Collections.sort(list2);
                 int dis1 = RecommandUtils.minTagDistance(list1,listTag);
                 int dis2 = RecommandUtils.minTagDistance(list2,listTag);
                 return dis2-dis1;

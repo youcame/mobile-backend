@@ -8,7 +8,8 @@ public enum ErrorCode {
     ACCOUNT_SAME(40102,"重复性错误", ""),
     PARAM_NULL(40001,"请求得到的数据不存在",""),
     VERIFY_ERROR(40103,"验证不成功",""),
-    SYSTEM_ERROR(50000, "系统内部异常", "");
+    SYSTEM_ERROR(50000, "系统内部异常", ""),
+    NOT_FOUND_ERROR(40400, "请求数据不存在", "");
     private int code;
     private String message;
     private String description;

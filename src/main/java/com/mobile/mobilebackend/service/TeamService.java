@@ -17,7 +17,7 @@ import java.util.List;
 * @createDate 2023-09-19 14:21:54
 */
 public interface TeamService extends IService<Team> {
-    public long addTeam(Team team, User loginUser);
+    long addTeam(Team team, User loginUser);
 
     List<UserTeamVo> teamList(TeamQueryRequest teamQueryRequest) throws InvocationTargetException, IllegalAccessException;
 
@@ -28,4 +28,6 @@ public interface TeamService extends IService<Team> {
     boolean quitTeam(TeamQuitRequest teamQuitRequest, User user);
 
     boolean deleteTeam(Long id, User user);
+
+    List<UserTeamVo> filterTeamWithoutMe(List<UserTeamVo> list,User currentUser);
 }
