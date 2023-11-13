@@ -25,6 +25,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.nio.charset.StandardCharsets;
 import java.time.Year;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -262,7 +263,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             for(int i=0;i<n&&i<TOTAL_RECOMMEND_USER;i++){
                 targetList.add(queue.poll());
             }
-            valueOperations.set(redisKey,targetList);
+            valueOperations.set(redisKey,targetList,2, TimeUnit.HOURS);
         }
         Collections.shuffle(targetList);
         return targetList.subList(0,num);
