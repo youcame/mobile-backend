@@ -31,17 +31,28 @@ public class FriendServiceImpl extends ServiceImpl<FriendMapper, Friend>
     UserService userService;
 
     @Override
-    public List<UserVo> getUserVoListFromDifferntStatus(int status, HttpServletRequest request) throws InvocationTargetException, IllegalAccessException {
+    public List<UserVo> getUserVoListFromDifferentStatus(int status, HttpServletRequest request) throws InvocationTargetException, IllegalAccessException {
         User currentUser = UserAuthority.getCurrentUser(request);
         Long id = currentUser.getId();
         QueryWrapper<Friend> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("secondUserId",id);
+        if (status == 1) {
+            queryWrapper.and(qw -> qw.eq("secondUserId", id).or().eq("firstUserId", id));
+        }
+        if(status==0){
+            queryWrapper.eq("secondUserId", id);
+        }
         queryWrapper.eq("status",status);
         List<Friend> list = this.list(queryWrapper);
         List<UserVo> ansList = new ArrayList<>();
         for (Friend friend : list) {
             Long firstUserId = friend.getFirstUserId();
-            User user = userService.getById(firstUserId);
+            Long secondUserId = friend.getSecondUserId();
+            User user;
+            if(firstUserId.equals(id)) {
+                user = userService.getById(secondUserId);
+            }else {
+                user = userService.getById(firstUserId);
+            }
             UserVo userVo = new UserVo();
             BeanUtils.copyProperties(userVo,user);
             ansList.add(userVo);

@@ -19,4 +19,8 @@
         status,createTime,updateTime,
         isDelete
     </sql>
+
+    <select id="getFriendList" resultMap="com.mobile.mobilebackend.mapper.UserMapper.BaseResultMap" parameterType="long">
+        select * from mobile.friend where (firstUserId=#{id} or secondUserId=#{id})
+    </select>
 </mapper>

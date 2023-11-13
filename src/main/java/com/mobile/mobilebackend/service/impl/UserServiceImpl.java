@@ -14,6 +14,8 @@ import com.mobile.mobilebackend.utils.RecommandUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.DigestUtils;
@@ -46,6 +48,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     private static final String SALT = "hao";
     @Resource
     private UserMapper userMapper;
+
+    @Resource
+    RedisTemplate<String,Object> redisTemplate;
 
 
     /**
@@ -149,17 +154,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             return null;
         }
         User safeUser = new User();
-        safeUser.setId(user.getId());
-        safeUser.setUsername(user.getUsername());
-        safeUser.setUserAccount(user.getUserAccount());
-        safeUser.setAvatarUrl(user.getAvatarUrl());
-        safeUser.setGender(user.getGender());
-        safeUser.setPhone(user.getPhone());
-        safeUser.setEmail(user.getEmail());
-        safeUser.setUserStatus(0);
-        safeUser.setCreateTime(new Date());
-        safeUser.setUserRole(user.getUserRole());
-        safeUser.setTags(user.getTags());
+        BeanUtils.copyProperties(user,safeUser);
         return safeUser;
     }
     @Override
@@ -207,7 +202,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         if(id!=loginUser.getId()){
             throw new BusinessException(ErrorCode.NO_AUTH);
         }
-
         User changedUser = this.getById(id);
         if(user.getTags()!=null) {
             String[] tagList = user.getTags().split(",");
@@ -215,16 +209,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             user.setTags(result);
         }
         BeanUtils.copyProperties(user,changedUser);
-//        changedUser.setUserRole(user.getUserRole());
-//        changedUser.setAvatarUrl(user.getAvatarUrl());
-//        changedUser.setUserStatus(user.getUserStatus());
-//        changedUser.setEmail(user.getEmail());
-//        changedUser.setPhone(user.getPhone());
-//        changedUser.setUsername(user.getUsername());
-//        changedUser.setGender(user.getGender());
-//        String[] tagList = user.getTags().split(",");
-//        String result = JSON.toJSONString(tagList);
-//        changedUser.setTags(result);
         return this.updateById(changedUser);
     }
 
@@ -237,42 +221,48 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     @Override
     public List<UserVo> matchUser(int num, User currentUser) {
-        String tags = currentUser.getTags();
-        if(tags == null || "[]".equals(tags)){
-            tags = "[\"男\",\"大二\",\"浑南校区\",\"网络开发\"]";
-        }
-        List<UserVo> targetList = new ArrayList<>();
-        List<String> listTag = JSON.parseArray(tags,String.class);
-        //当前登录用户的标签
-        Collections.sort(listTag);
-        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        queryWrapper.isNotNull("tags");
-        queryWrapper.select("id", "userRole", "tags", "userName", "avatarUrl","profile");
-        List<User> userList = this.list(queryWrapper);
-        PriorityQueue<UserVo> queue = new PriorityQueue<>((a,b)->{
-                List<String> list1= JSON.parseArray(a.getTags(),String.class);
-                List<String> list2= JSON.parseArray(b.getTags(),String.class);
-                Collections.sort(list1);
-                Collections.sort(list2);
-                int dis1 = RecommandUtils.minTagDistance(list1,listTag);
-                int dis2 = RecommandUtils.minTagDistance(list2,listTag);
-                return dis2-dis1;
+        ValueOperations<String, Object> valueOperations = redisTemplate.opsForValue();
+        String redisKey = String.format("mobile:user:recommend:%s",currentUser.getId());
+        List<UserVo> targetList= (List<UserVo>) valueOperations.get(redisKey);
+        if(targetList==null){
+            targetList = new ArrayList<>();
+            String tags = currentUser.getTags();
+            if(tags == null || "[]".equals(tags)){
+                tags = "[\"男\",\"大二\",\"浑南校区\",\"网络开发\"]";
             }
-        );
-        for (User user : userList) {
-            if(Objects.equals(user.getId(), currentUser.getId())||user.getUserRole()==1){
-                continue;
+            List<String> listTag = JSON.parseArray(tags,String.class);
+            //当前登录用户的标签
+            Collections.sort(listTag);
+            QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+            queryWrapper.isNotNull("tags");
+            queryWrapper.select("id", "userRole", "tags", "userName", "avatarUrl","profile");
+            List<User> userList = this.list(queryWrapper);
+            PriorityQueue<UserVo> queue = new PriorityQueue<>((a,b)->{
+                    List<String> list1= JSON.parseArray(a.getTags(),String.class);
+                    List<String> list2= JSON.parseArray(b.getTags(),String.class);
+                    Collections.sort(list1);
+                    Collections.sort(list2);
+                    int dis1 = RecommandUtils.minTagDistance(list1,listTag);
+                    int dis2 = RecommandUtils.minTagDistance(list2,listTag);
+                    return dis2-dis1;
+                }
+            );
+            for (User user : userList) {
+                if(Objects.equals(user.getId(), currentUser.getId())||user.getUserRole()==1){
+                    continue;
+                }
+                UserVo userVo = new UserVo();
+                BeanUtils.copyProperties(user,userVo);
+                queue.offer(userVo);
+                if(queue.size()>TOTAL_RECOMMEND_USER) {
+                    queue.poll();
+                }
             }
-            UserVo userVo = new UserVo();
-            BeanUtils.copyProperties(user,userVo);
-            queue.offer(userVo);
-            if(queue.size()>TOTAL_RECOMMEND_USER) {
-                queue.poll();
+            int n=queue.size();
+            for(int i=0;i<n&&i<TOTAL_RECOMMEND_USER;i++){
+                targetList.add(queue.poll());
             }
-        }
-        int n=queue.size();
-        for(int i=0;i<n&&i<TOTAL_RECOMMEND_USER;i++){
-            targetList.add(queue.poll());
+            valueOperations.set(redisKey,targetList);
         }
         Collections.shuffle(targetList);
         return targetList.subList(0,num);

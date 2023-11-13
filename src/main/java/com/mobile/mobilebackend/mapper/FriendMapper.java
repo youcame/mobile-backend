@@ -2,6 +2,9 @@ package com.mobile.mobilebackend.mapper;
 
 import com.mobile.mobilebackend.model.domain.Friend;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.mobile.mobilebackend.model.vo.UserVo;
+
+import java.util.List;
 
 /**
 * @author HUANG
@@ -10,7 +13,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @Entity com.mobile.mobilebackend.model.domain.Friend
 */
 public interface FriendMapper extends BaseMapper<Friend> {
-
+    List<UserVo> getFriendList(Long id);
 }
 
 
